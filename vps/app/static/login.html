@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1216" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#eef2f7" media="(prefers-color-scheme: light)">
+<meta name="robots" content="noindex">
+<title>Entrar · Casas</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%232563eb' d='M12 3 2 11h3v9h5v-6h4v6h5v-9h3z'/%3E%3C/svg%3E">
+<style>
+:root{--bg1:#eef2f7;--bg2:#dfe7f3;--card:#ffffffd9;--fg:#141a21;--mut:#5f6b77;--line:#d9dfe6;--acc:#2563eb;--acc2:#1d4ed8;--red:#c62828;--sombra:0 20px 50px -20px #1e3a8a40}
+@media (prefers-color-scheme:dark){:root{--bg1:#0b0e12;--bg2:#121a26;--card:#171c23e6;--fg:#e8ebee;--mut:#9aa4ad;--line:#2a3038;--acc:#3b82f6;--acc2:#60a5fa;--red:#f87171;--sombra:0 20px 60px -20px #000c}}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;color:var(--fg);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background:radial-gradient(1200px 600px at 10% -10%,color-mix(in srgb,var(--acc) 18%,transparent),transparent 60%),
+             radial-gradient(900px 500px at 110% 110%,color-mix(in srgb,var(--acc) 12%,transparent),transparent 60%),
+             linear-gradient(160deg,var(--bg1),var(--bg2));
+  display:grid;place-items:center;padding:24px 16px}
+.caixa{width:100%;max-width:380px}
+.marca{display:flex;align-items:center;gap:12px;margin:0 0 20px 4px}
+.marca .logo{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,var(--acc),var(--acc2));box-shadow:0 8px 20px -8px var(--acc)}
+.marca .logo svg{width:24px;height:24px;fill:#fff}
+.marca b{font-size:19px;display:block;letter-spacing:.2px}.marca span{color:var(--mut);font-size:13px}
+form{background:var(--card);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:18px;padding:24px;box-shadow:var(--sombra)}
+h1{font-size:20px;margin:0 0 4px}p.sub{margin:0 0 20px;color:var(--mut);font-size:14px}
+label{display:block;font-size:13px;font-weight:600;margin:0 0 6px}
+.campo{position:relative;margin-bottom:14px}
+.campo svg.ic{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;fill:var(--mut);pointer-events:none}
+input[type=text],input[type=password]{width:100%;font:inherit;font-size:16px;color:var(--fg);background:color-mix(in srgb,var(--card) 60%,transparent);border:1px solid var(--line);border-radius:11px;padding:12px 44px 12px 40px;outline:none;transition:border-color .15s,box-shadow .15s}
+input:focus{border-color:var(--acc);box-shadow:0 0 0 4px color-mix(in srgb,var(--acc) 20%,transparent)}
+.olho{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;padding:8px;border-radius:8px;cursor:pointer;color:var(--mut)}
+.olho:hover{background:color-mix(in srgb,var(--mut) 12%,transparent)}.olho svg{width:20px;height:20px;fill:currentColor;display:block}
+.linha{display:flex;align-items:center;justify-content:space-between;margin:4px 0 18px;font-size:14px}
+.linha label{display:flex;align-items:center;gap:8px;font-weight:400;margin:0;cursor:pointer}
+.linha input{width:17px;height:17px;accent-color:var(--acc)}
+button.entrar{width:100%;font:inherit;font-weight:600;font-size:16px;color:#fff;border:0;border-radius:11px;padding:13px;cursor:pointer;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));box-shadow:0 10px 24px -12px var(--acc);display:flex;justify-content:center;align-items:center;gap:10px;transition:filter .15s,transform .05s}
+button.entrar:hover{filter:brightness(1.06)}button.entrar:active{transform:translateY(1px)}button.entrar:disabled{filter:grayscale(.4) brightness(.9);cursor:wait}
+.giro{width:18px;height:18px;border:2px solid #fff6;border-top-color:#fff;border-radius:50%;animation:g .7s linear infinite;display:none}
+button.entrar:disabled .giro{display:block}@keyframes g{to{transform:rotate(1turn)}}
+.erro{display:none;align-items:flex-start;gap:8px;background:color-mix(in srgb,var(--red) 12%,transparent);color:var(--red);border:1px solid color-mix(in srgb,var(--red) 35%,transparent);border-radius:10px;padding:10px 12px;font-size:14px;margin-bottom:14px}
+.erro.on{display:flex}.erro svg{flex:none;width:18px;height:18px;fill:currentColor;margin-top:1px}
+.treme{animation:t .35s}@keyframes t{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.caps{display:none;color:var(--mut);font-size:12px;margin:-8px 0 12px}.caps.on{display:block}
+footer{text-align:center;color:var(--mut);font-size:12px;margin-top:16px}
+footer svg{width:13px;height:13px;fill:currentColor;vertical-align:-2px;margin-right:4px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main class="caixa">
+  <div class="marca">
+    <div class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 11h3v9h5v-6h4v6h5v-9h3z"/></svg></div>
+    <div><b>Casa &amp; Rancho</b><span>Câmeras, avisos e robô</span></div>
+  </div>
+  <form id="f" novalidate>
+    <h1>Entrar</h1>
+    <p class="sub">Use o usuário e a senha que você recebeu.</p>
+    <div class="erro" id="erro" role="alert"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-2h2Zm0-4h-2V7h2Z"/></svg><span></span></div>
+    <label for="usuario">Usuário</label>
+    <div class="campo"><svg class="ic" viewBox="0 0 24 24"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5Z"/></svg>
+      <input id="usuario" name="username" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required autofocus></div>
+    <label for="senha">Senha</label>
+    <div class="campo"><svg class="ic" viewBox="0 0 24 24"><path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2Zm-7-2a2 2 0 1 1 4 0v2h-4Z"/></svg>
+      <input id="senha" name="password" type="password" autocomplete="current-password" required>
+      <button type="button" class="olho" id="olho" aria-label="Mostrar senha" title="Mostrar senha"><svg viewBox="0 0 24 24"><path id="olhop" d="M12 5C6.5 5 2.7 9.3 1.5 12c1.2 2.7 5 7 10.5 7s9.3-4.3 10.5-7C21.3 9.3 17.5 5 12 5Zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z"/></svg></button></div>
+    <p class="caps" id="caps">Caps Lock está ligado.</p>
+    <div class="linha"><label><input type="checkbox" id="lembrar" checked> Manter conectado neste aparelho</label></div>
+    <button class="entrar" id="btn"><span class="giro"></span><span id="btxt">Entrar</span></button>
+  </form>
+  <footer><svg viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5Z"/></svg>Conexão protegida · após 5 tentativas erradas o acesso fica bloqueado por 15 min</footer>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const ABERTO='M12 5C6.5 5 2.7 9.3 1.5 12c1.2 2.7 5 7 10.5 7s9.3-4.3 10.5-7C21.3 9.3 17.5 5 12 5Zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z',
+  FECHADO='M2.3 3.7 3.7 2.3l18 18-1.4 1.4-3.2-3.2A11 11 0 0 1 12 19C6.5 19 2.7 14.7 1.5 12a13 13 0 0 1 4-4.9L2.3 3.7ZM12 5c5.5 0 9.3 4.3 10.5 7a12.7 12.7 0 0 1-3 4.2L16 12.7A4 4 0 0 0 11.3 8L8.9 5.6C9.9 5.2 10.9 5 12 5Z';
+try{const u=localStorage.getItem('ultimo_usuario');if(u){$('#usuario').value=u;$('#senha').autofocus=true;setTimeout(()=>$('#senha').focus(),0)}}catch(e){}
+$('#olho').onclick=()=>{const s=$('#senha'),v=s.type==='password';s.type=v?'text':'password';$('#olhop').setAttribute('d',v?FECHADO:ABERTO);
+  $('#olho').setAttribute('aria-label',v?'Esconder senha':'Mostrar senha');s.focus()};
+$('#senha').addEventListener('keyup',e=>$('#caps').classList.toggle('on',!!e.getModifierState&&e.getModifierState('CapsLock')));
+function erro(m){const e=$('#erro');e.querySelector('span').textContent=m;e.classList.add('on');const f=$('#f');f.classList.remove('treme');void f.offsetWidth;f.classList.add('treme')}
+$('#f').onsubmit=async ev=>{ev.preventDefault();$('#erro').classList.remove('on');
+  const usuario=$('#usuario').value.trim(), senha=$('#senha').value;
+  if(!usuario||!senha){erro('Preencha usuário e senha.');(usuario?$('#senha'):$('#usuario')).focus();return}
+  $('#btn').disabled=true;$('#btxt').textContent='Entrando…';
+  try{const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario,senha,lembrar:$('#lembrar').checked})});
+    if(r.ok){try{localStorage.setItem('ultimo_usuario',usuario)}catch(e){}
+      const volta=new URLSearchParams(location.search).get('volta')||''; // só caminho local ("/x"), nunca "//outro-site"
+      location.replace((/^\/(?!\/)/.test(volta)?volta:'/')+location.hash);return}
+    let m='Não foi possível entrar ('+r.status+').';try{m=(await r.json()).detail||m}catch(e){}
+    erro(m);$('#senha').select();
+  }catch(e){erro('Sem conexão com o servidor. Confira a internet e tente de novo.')}
+  $('#btn').disabled=false;$('#btxt').textContent='Entrar'};
+</script>
+</body>
+</html>

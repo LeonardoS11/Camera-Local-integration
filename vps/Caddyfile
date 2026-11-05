@@ -1,0 +1,57 @@
+seu-dominio.exemplo.com {
+	# o matcher padrão do encode só comprime texto/JSON/JS; vídeo passa direto
+	encode gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy same-origin
+		-Server
+	}
+
+	# instalador da ponte do celular (go2rtc + ponte.py; nada secreto: o celular pareia com código do painel)
+	handle /ponte/* {
+		root * /srv
+		file_server
+	}
+
+	# vídeo do PC e do celular-ponte para o go2rtc da VPS (POST MPEG-TS contínuo). O app confere o token:
+	# o do PC vale para qualquer câmera; o de cada ponte só para as câmeras da casa dela.
+	handle /ingest/* {
+		forward_auth app:8000 {
+			uri /api/auth/ingest
+		}
+		# /ingest/api/stream.ts -> /ao-vivo/api/stream.ts (um só passo: o Caddy roda rewrite antes de uri)
+		uri replace /ingest/ /ao-vivo/ 1
+		reverse_proxy go2rtc:1984 {
+			flush_interval -1
+		}
+	}
+
+	# ao vivo: só leitura (GET/websocket) na API do go2rtc, com a sessão do login. Quem não é admin só abre
+	# as câmeras das casas dele (o app decide pelo ?src=).
+	handle /ao-vivo/* {
+		@escrita not method GET
+		respond @escrita 405
+		forward_auth app:8000 {
+			uri /api/auth/aovivo
+			# a checagem é HTTP simples: sem isto o pedido de websocket iria "como upgrade" para o app
+			header_up -Upgrade
+			header_up -Connection
+		}
+		reverse_proxy go2rtc:1984 {
+			flush_interval -1
+		}
+	}
+
+	# todo o resto é do app: login próprio (tela /login, sessão por cookie), agente e botões dos avisos
+	# têm os tokens deles (30/10: saiu o basic_auth, que não deixava separar quem vê cada casa)
+	handle {
+		reverse_proxy app:8000
+	}
+}
+
+# avisos (ntfy não funciona em subcaminho, por isso fica numa porta própria com o mesmo certificado)
+seu-dominio.exemplo.com:8443 {
+	reverse_proxy ntfy:80
+}

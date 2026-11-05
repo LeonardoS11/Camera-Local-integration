@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icone-192.png">
+<title>Configurar celular-ponte</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--fg:#1b1f24;--mut:#66707a;--line:#e3e6ea;--acc:#2563eb;--red:#dc2626;--grn:#16a34a;--amb:#d97706}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1216;--card:#181c22;--fg:#e8ebee;--mut:#9aa4ad;--line:#2a3038;--acc:#60a5fa;--red:#f87171;--grn:#4ade80;--amb:#fbbf24}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:var(--card);border-bottom:1px solid var(--line);padding:12px 16px;display:flex;gap:10px;align-items:center;position:sticky;top:0;z-index:2}
+header a{color:var(--mut);text-decoration:none;font-size:22px;line-height:1}header b{margin-right:auto}
+main{max-width:640px;margin:0 auto;padding:16px}
+.passo{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px;position:relative}
+.passo h2{font-size:17px;margin:0 0 6px;display:flex;gap:10px;align-items:center}
+.num{width:28px;height:28px;border-radius:50%;background:var(--acc);color:#fff;display:grid;place-items:center;font-size:14px;flex:none}
+.passo.ok .num{background:var(--grn)}.passo.ok .num::after{content:"✓"}.passo.ok .num span{display:none}
+p{margin:6px 0}.mut{color:var(--mut);font-size:14px}
+.b{display:inline-flex;align-items:center;justify-content:center;gap:6px;font:inherit;font-weight:600;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:10px;padding:10px 14px;text-decoration:none;cursor:pointer;margin:4px 6px 4px 0}
+.b.p{background:var(--acc);border-color:var(--acc);color:#fff}
+.cmd{display:flex;gap:6px;align-items:stretch;margin:8px 0}.cmd code{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:13px;word-break:break-all;user-select:all}
+.lista{list-style:none;padding:0;margin:8px 0}.lista li{padding:6px 0;border-top:1px solid var(--line);display:flex;gap:8px;align-items:flex-start}.lista li:first-child{border-top:0}
+.st{flex:none;width:22px;text-align:center}.st.ok{color:var(--grn)}.st.no{color:var(--mut)}.st.er{color:var(--red)}
+.aviso{background:color-mix(in srgb,var(--amb) 12%,transparent);border:1px solid color-mix(in srgb,var(--amb) 40%,transparent);border-radius:10px;padding:8px 10px;font-size:14px;margin:8px 0}
+select{font:inherit;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--card);color:var(--fg)}
+.cod{font-size:28px;font-weight:700;letter-spacing:4px}
+</style>
+</head>
+<body>
+<header><a href="/" aria-label="Voltar ao painel">‹</a><b>Configurar celular-ponte</b><select id="casa"></select></header>
+<main>
+  <p class="mut">Abra esta página <b>no celular que vai ficar</b> na casa (ligado na tomada, no Wi-Fi das câmeras). Ele leva o vídeo das câmeras até o servidor. Siga os passos de cima para baixo; cada um fica verde sozinho.</p>
+  <div class="aviso" id="naoandroid" hidden>Este aparelho não parece Android. A ponte funciona em celular Android (7 ou mais novo). Abra esta página nele.</div>
+
+  <section class="passo" id="p1"><h2><span class="num"><span>1</span></span>Instalar o Termux</h2>
+    <p>É o programa que roda a ponte. Baixe e instale direto daqui (não use a Play Store: a versão de lá é antiga).</p>
+    <div id="apks"></div>
+    <p class="mut">Se o Android avisar, toque em <b>Configurações → Permitir desta fonte</b> e volte para instalar. Se já houver um Termux da Play Store, desinstale antes (as versões não se misturam).</p>
+    <p class="mut">Depois de instalar, <b>abra o Termux uma vez</b> e espere aparecer o <code>$</code> (1 a 2 min na primeira vez).</p>
+    <button class="b" onclick="feito(1)">Já instalei e abri</button></section>
+
+  <section class="passo" id="p2"><h2><span class="num"><span>2</span></span>Copiar o comando e colar no Termux</h2>
+    <p>O comando já leva um código de pareamento (vale 15 min, uso único).</p>
+    <button class="b p" id="gerar" onclick="gerar()">Gerar comando</button>
+    <div id="cmdbox" hidden>
+      <p>Código: <span class="cod" id="cod"></span> <span class="mut" id="validade"></span></p>
+      <div class="cmd"><code id="cmd"></code></div>
+      <button class="b p" onclick="copiar()" id="copiar">Copiar comando</button>
+      <a class="b" href="intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;component=com.termux/.app.TermuxActivity;end">Abrir o Termux</a>
+      <p class="mut">No Termux: toque e segure na tela → <b>Colar</b> → Enter. Ele instala tudo sozinho (3 a 10 min) e pareia. Se perguntar algo, toque Enter.</p>
+    </div>
+    <details style="margin-top:10px"><summary class="mut" style="cursor:pointer">Já instalei e só quero atualizar a ponte</summary>
+      <div class="cmd"><code id="cmdatual">curl -L seu-dominio.exemplo.com/ponte/i | sh</code></div>
+      <button class="b" onclick="copiar('cmdatual',this)">Copiar</button>
+      <p class="mut">Não pede código: baixa a ponte nova e reinicia. Curto o bastante para digitar, se preferir.</p></details></section>
+
+  <section class="passo" id="p3"><h2><span class="num"><span>3</span></span>Entrar na conta Xiaomi no celular</h2>
+    <p>Uma vez só, para o celular poder falar com as câmeras. A senha fica só no celular.</p>
+    <p class="mut" id="xmnota"><b>Espere o passo 2 terminar.</b> Esta tela é do programa das câmeras que roda <b>dentro deste celular</b> (endereço 127.0.0.1): ela só abre aqui no celular da ponte, depois que o Termux terminar de instalar. O botão libera sozinho.</p>
+    <a class="b p" id="xmlink" href="http://127.0.0.1:1984/add.html" target="_blank" rel="noopener" style="opacity:.45;pointer-events:none">Abrir a tela da conta Xiaomi</a>
+    <p class="mut">Lá: toque em <b>Xiaomi</b> → usuário e senha da conta → o código que chegar por SMS/e-mail. Depois volte para esta aba.</p></section>
+
+  <section class="passo" id="p4"><h2><span class="num"><span>4</span></span>Conferir</h2>
+    <ul class="lista" id="status"><li><span class="st no">…</span><span>Esperando o celular parear (passo 2).</span></li></ul></section>
+
+  <section class="passo" id="p5"><h2><span class="num"><span>5</span></span>Deixar sempre ligado</h2>
+    <ul class="lista">
+      <li><span class="st">🔋</span><span><b>Configurações → Apps → Termux → Bateria → Sem restrições</b> (ou "Não otimizar"). Sem isso o Android pausa a ponte.</span></li>
+      <li><span class="st">🔁</span><span>Abra o app <b>Termux:Boot</b> uma vez: a ponte volta sozinha quando o celular reinicia.</span></li>
+      <li><span class="st">🔌</span><span>Deixe na tomada e no Wi-Fi das câmeras. Se o celular tiver "proteger bateria/carregar até 85%", ligue.</span></li>
+      <li><span class="st">🔔</span><span>Se a ponte ficar 5 min sem sinal, chega aviso para quem acompanha esta casa.</span></li>
+    </ul>
+    <a class="b" href="/">Voltar ao painel</a></section>
+</main>
+<script>
+const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const api=(u,o)=>fetch(u,o).then(async r=>{if(r.status===401){location.href='/login?volta=/configurar-ponte';throw 0}if(!r.ok){let m=r.status;try{m=(await r.json()).detail}catch(e){}alert('Erro: '+m);throw m}return r.json()});
+let EU, CASA, DESDE=0, NC={};
+$('#naoandroid').hidden=/Android/i.test(navigator.userAgent);
+function feito(n){$('#p'+n).classList.add('ok');try{localStorage.setItem('ponte_p'+n,'1')}catch(e){}}
+try{if(localStorage.getItem('ponte_p1'))feito(1)}catch(e){}
+async function gerar(){const r=await api('/api/pontes/codigo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({casa:CASA})});
+  DESDE=Date.now()/1000-5;['p2','p3','p4'].forEach(id=>$('#'+id).classList.remove('ok'));$('#cmdbox').hidden=false;$('#cod').textContent=r.codigo;$('#cmd').textContent=r.comando;
+  $('#validade').textContent='· vale até '+new Date(r.expira*1000).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});$('#gerar').textContent='Gerar outro'}
+async function copiar(id='cmd',bt=$('#copiar')){const el=$('#'+id), t=el.textContent, antes=bt.textContent;try{await navigator.clipboard.writeText(t)}catch(e){const r=document.createRange();r.selectNode(el);getSelection().removeAllRanges();getSelection().addRange(r);document.execCommand('copy')}
+  bt.textContent='Copiado ✓';setTimeout(()=>bt.textContent=antes,2500)}
+const item=(ok,txt)=>`<li><span class="st ${ok===true?'ok':ok===false?'er':'no'}">${ok===true?'✓':ok===false?'✕':'…'}</span><span>${txt}</span></li>`;
+async function status(){let ps;try{ps=(await api('/api/pontes')).filter(p=>p.casa===CASA)}catch(e){return}
+  const p=ps.filter(x=>!DESDE||x.criado>=DESDE).sort((a,b)=>b.criado-a.criado)[0]||(!DESDE?ps.sort((a,b)=>b.visto-a.visto)[0]:null);
+  if(!p){$('#status').innerHTML=item(null,DESDE?'Esperando o comando terminar no Termux…':'Nenhum celular pareado ainda (passo 2).');return}
+  feito(2);const i=p.info||{}, cams=Object.keys(NC);
+  let h=item(true,`Pareado: <b>${esc(p.nome)}</b>`)+item(p.online?true:false,p.online?'Falando com o servidor':'Sem sinal há '+Math.round(Date.now()/1000-p.visto)+' s')+
+    item(i.go2rtc===true?true:i.go2rtc===false?false:null,'Programa das câmeras (go2rtc) rodando')+
+    item(i.login_xiaomi===true?true:i.login_xiaomi===false?false:null,i.login_xiaomi?'Conta Xiaomi conectada':'Conta Xiaomi: falta entrar (passo 3)');
+  if(i.login_xiaomi)feito(3);
+  const pronto=p.online&&i.go2rtc===true;$('#xmlink').style.opacity=pronto?'':'.45';$('#xmlink').style.pointerEvents=pronto?'':'none';
+  $('#xmnota').innerHTML=pronto?'Pronto: o programa das câmeras está rodando neste celular. Toque no botão abaixo.':$('#xmnota').innerHTML;
+  let todas=cams.length>0;
+  for(const c of cams){const v=(i.cameras||{})[c]||{};todas=todas&&!!v.enviando;h+=item(v.enviando?true:i.login_xiaomi?false:null,`${esc(NC[c])}: ${v.enviando?'enviando vídeo ('+(v.mb||0).toFixed(0)+' MB)':v.erro?esc(String(v.erro).slice(0,80)):'esperando'}`)}
+  if(i.bateria!=null)h+=item(i.bateria>20,`Bateria ${i.bateria}%${i.carregando?' (carregando)':' — ligue na tomada'}`);
+  $('#status').innerHTML=h;if(todas&&p.online)feito(4)}
+// uma consulta por vez; nada com a página oculta; a cada 4 s enquanto configura, 15 s depois que o passo 4 ficou ok
+let OCUPADO=false, ULTIMO=0;
+async function tick(){if(document.hidden||OCUPADO)return;const pronto=$('#p4').classList.contains('ok');if(Date.now()-ULTIMO<(pronto?15000:4000))return;
+  OCUPADO=true;try{await status()}catch(e){}finally{OCUPADO=false;ULTIMO=Date.now()}}
+(async()=>{EU=await api('/api/eu');const cs=EU.casas.filter(c=>c.ponte);
+  if(!cs.length){document.querySelector('main').innerHTML='<p>Nenhuma casa usa ponte. Em Admin → Casas e câmeras, marque câmeras como "pelo celular-ponte".</p>';return}
+  $('#casa').innerHTML=cs.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join('');$('#casa').hidden=cs.length<2;
+  const ap=()=>{CASA=$('#casa').value;NC=cs.find(c=>c.id===CASA).cameras;DESDE=0;status()};$('#casa').onchange=ap;ap();
+  const apks=await api('/api/pontes/apks');
+  $('#apks').innerHTML=apks.map((a,k)=>`<a class="b ${k?'':'p'}" href="${esc(a.url)}" ${a.espelho?'download':'target="_blank" rel="noopener"'}>${k?'':'⬇ '}${esc(a.nome)}${a.mb?` · ${a.mb} MB`:''}</a>`).join('')+
+    (apks.some(a=>a.id==='termux32')?'<p class="mut">Use o primeiro Termux. Só se o Android disser "app não compatível" ou "erro ao analisar o pacote", instale o de 32 bits. Termux:Boot e Termux:API são opcionais, mas recomendados.</p>':'')+
+    (apks.some(a=>!a.espelho)?'<p class="mut">Os botões abrem a página oficial do Termux no GitHub: baixe o arquivo que termina em <b>arm64-v8a.apk</b> (ou <b>universal.apk</b> se não souber).</p>':'');
+  setInterval(tick,1000)})();
+</script>
+</body>
+</html>

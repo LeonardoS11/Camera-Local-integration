@@ -1,0 +1,90 @@
+# Stack da VPS (seu-dominio.exemplo.com): Caddy (HTTPS) + ntfy (avisos) + app (eventos, rostos, IA, robô, login)
+# + go2rtc/gravador (ao vivo e gravação) + vigia (detecção das casas sem PC: rancho, via celular-ponte)
+# Segredos ficam em .env (não versionado); veja .env.example.
+services:
+  caddy:
+    image: caddy:2.11.7
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8443:8443"
+    env_file: .env
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+      - ./ponte:/srv/ponte:ro   # instalador público da ponte do celular (sem segredos)
+    depends_on: [app, ntfy]
+
+  ntfy:
+    image: binwiederhier/ntfy:${NTFY_TAG:-v2.32.0}
+    restart: unless-stopped
+    command: serve
+    environment:
+      TZ: America/Sao_Paulo
+    volumes:
+      - ./ntfy/server.yml:/etc/ntfy/server.yml:ro
+      - ntfy_cache:/var/cache/ntfy
+      - ntfy_lib:/var/lib/ntfy
+
+  app:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      TZ: America/Sao_Paulo
+      DADOS: /data
+      REC: /rec
+    volumes:
+      - app_data:/data
+      - gravacoes:/rec   # escrita só para os trechos do cartão SD que as pontes mandam
+      - ./ponte:/srv/ponte:ro   # para saber se os APKs do Termux estão espelhados
+
+  go2rtc:
+    image: alexxit/go2rtc:1.9.14
+    restart: unless-stopped
+    environment:
+      TZ: America/Sao_Paulo
+    volumes:
+      # gravável: o app reescreve a lista de streams quando as câmeras mudam no Admin (API /api/config)
+      - ./go2rtc/go2rtc.yaml:/config/go2rtc.yaml
+
+  gravador:
+    build:
+      context: .
+      dockerfile: gravador/Dockerfile
+    restart: unless-stopped
+    env_file: .env   # AGENTE_TOKEN: lê a lista de câmeras do app
+    environment:
+      TZ: America/Sao_Paulo
+      CAMERAS: garagem,cw300,rancho1,rancho2
+      RETENCAO_GRAVACAO_DIAS: ${RETENCAO_GRAVACAO_DIAS:-7}
+      MIN_LIVRE_GB: ${MIN_LIVRE_GB:-15}
+    volumes:
+      - gravacoes:/rec
+    depends_on: [go2rtc]
+
+  vigia:
+    build:
+      context: .
+      dockerfile: vigia/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      TZ: America/Sao_Paulo
+      # câmeras: as das casas com ponte, lidas do app (Admin > Casas e câmeras)
+      # threads: o OpenCV vê os 4 vCPU do host, mas o cgroup dá 2 (cpus abaixo)
+      AGENTE_CFG: '{"vps": "http://app:8000", "aparelhos": false, "enviar_video": false, "cameras_da_vps": true, "threads": 2}'
+    cpus: 2
+    depends_on: [app, go2rtc]
+
+volumes:
+  gravacoes:
+  caddy_data:
+  caddy_config:
+  ntfy_cache:
+  ntfy_lib:
+  app_data:

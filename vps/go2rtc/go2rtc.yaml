@@ -1,0 +1,17 @@
+# go2rtc da VPS: recebe o vídeo do PC (casa) e do celular-ponte (rancho) (POST MPEG-TS via Caddy /ingest, com token) e serve o ao vivo
+# no painel (/ao-vivo, atrás do login do painel). O RTSP interno é lido pelo gravador. Nada disso
+# tem porta publicada: só o Caddy fala com ele.
+api:
+  listen: ":1984"
+  base_path: "/ao-vivo"
+rtsp:
+  listen: ":8554"
+webrtc:
+  listen: ""
+log:
+  level: info
+streams:
+  garagem:
+  cw300:
+  rancho1:
+  rancho2:

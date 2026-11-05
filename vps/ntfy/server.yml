@@ -1,0 +1,13 @@
+base-url: "https://seu-dominio.exemplo.com:8443"
+listen-http: ":80"
+behind-proxy: true
+cache-file: "/var/cache/ntfy/cache.db"
+cache-duration: "72h"
+attachment-cache-dir: "/var/cache/ntfy/attachments"
+attachment-expiry-duration: "72h"
+attachment-file-size-limit: "5M"
+# só usuários autenticados leem/publicam
+auth-file: "/var/lib/ntfy/user.db"
+auth-default-access: "deny-all"
+# iPhone: o ntfy.sh só repassa um "acorde" vazio para a Apple; o conteúdo sai daqui
+upstream-base-url: "https://ntfy.sh"

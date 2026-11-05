@@ -1,0 +1,19 @@
+{
+  "casa": {
+    "nome": "Casa",
+    "topico": "casa",
+    "robo": true,
+    "presenca": true,
+    "cameras": {"garagem": "Garagem", "cw300": "Quintal"},
+    "ptz": ["garagem", "cw300"],
+    "ajustes": ["garagem", "cw300"]
+  },
+  "sitio": {
+    "nome": "Sítio",
+    "topico": "sitio",
+    "cameras": {"sitio1": "Entrada"},
+    "ponte": {
+      "sitio1": "xiaomi://<ID_DA_CONTA_XIAOMI>:cn@192.168.1.50?did=<DID_DA_CAMERA>&model=chuangmi.camera.042a02"
+    }
+  }
+}

@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#1d4ed8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Casas">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icone-180.png">
+<link rel="icon" href="/icone-192.png">
+<title>Casas</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--fg:#1b1f24;--mut:#66707a;--line:#e3e6ea;--acc:#2563eb;--red:#dc2626;--amb:#d97706;--grn:#16a34a}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1216;--card:#181c22;--fg:#e8ebee;--mut:#9aa4ad;--line:#2a3038;--acc:#60a5fa;--red:#f87171;--amb:#fbbf24;--grn:#4ade80}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{position:sticky;top:0;background:var(--card);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:8px;align-items:center;z-index:2}
+header b{margin-right:auto;font-size:17px}
+nav button{background:none;border:0;color:var(--mut);padding:6px 10px;border-radius:8px;font:inherit;cursor:pointer}
+nav button.on{background:var(--bg);color:var(--fg);font-weight:600}
+main{max-width:980px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px}
+.ev{display:grid;grid-template-columns:minmax(0,260px) 1fr;gap:12px}
+@media (max-width:640px){.ev{grid-template-columns:1fr}}
+.ev img.foto{width:100%;border-radius:8px;cursor:zoom-in;background:#000}
+.ev .tira{display:flex;flex-wrap:wrap;gap:4px}.ev .tira img.foto~img.foto{width:calc(50% - 2px)}
+.tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;border:1px solid currentColor;margin-right:6px}
+.estranho{color:var(--red)}.pessoa{color:var(--amb)}.conhecido,.pessoa_familiar,.provavel,.visita{color:var(--grn)}.sem_pessoa{color:var(--mut)}
+.mut{color:var(--mut);font-size:13px}
+.rostos{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.rosto{text-align:center;font-size:12px}.rosto img{width:64px;height:64px;border-radius:8px;display:block;object-fit:cover}
+button.b,input,select,textarea{font:inherit;border:1px solid var(--line);border-radius:8px;padding:8px 12px;background:var(--card);color:var(--fg)}
+button.b{cursor:pointer}button.b.p{background:var(--acc);color:#fff;border-color:var(--acc)}
+.grid{display:flex;gap:8px;flex-wrap:wrap}
+dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0}dt{color:var(--mut)}
+.vivo{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media (max-width:760px){.vivo{grid-template-columns:1fr}}
+.vivo iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:8px;background:#000;margin-top:8px}
+.grupo .fotos{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.grupo label{position:relative;cursor:pointer}.grupo label img{width:72px;height:72px;border-radius:8px;object-fit:cover;display:block;border:2px solid var(--acc)}
+.grupo label input{position:absolute;top:4px;left:4px}.grupo label input:not(:checked)+img{opacity:.35;border-color:transparent}
+.sug{font-size:13px}.sug.alta{color:var(--grn)}.sug.duvida{color:var(--amb)}
+.ctl{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0;border-top:1px solid var(--line)}.ctl:first-of-type{border-top:0}
+.ctl .v{display:flex;gap:6px;align-items:center}.ctl input[type=number]{width:80px}.ctl input[type=text]{width:110px}
+.ctl.destaque{background:color-mix(in srgb,var(--red) 10%,transparent);border-radius:8px;padding:6px 8px}
+.mapa{position:relative;margin-top:8px;max-width:640px}.mapa img{width:100%;border-radius:8px;display:block;background:#145090}
+.mapa .etq{position:absolute;transform:translate(-50%,-50%);background:#000a;color:#fff;border:2px solid #fff6;border-radius:99px;padding:3px 10px;font-size:13px;cursor:pointer;white-space:nowrap;user-select:none}
+.mapa .etq.on{background:var(--acc);border-color:#fff}
+.ptz{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px}.ptz button{min-width:44px;height:40px}
+.pad{display:grid;grid-template-columns:repeat(3,64px);gap:6px;margin-top:8px}.pad button{height:48px}
+#casa{font-weight:600;padding:6px 10px;margin-right:auto}
+.conta{position:relative}.conta>button{background:none;border:1px solid var(--line);color:var(--fg);border-radius:99px;padding:5px 12px;font:inherit;cursor:pointer;display:flex;gap:6px;align-items:center}
+.conta .av{width:22px;height:22px;border-radius:50%;background:var(--acc);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700}
+.menu{position:absolute;right:0;top:calc(100% + 6px);background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px -10px #0006;min-width:190px;padding:6px;display:none;z-index:4}
+.menu.on{display:block}.menu button{display:block;width:100%;text-align:left;background:none;border:0;color:var(--fg);padding:8px 10px;border-radius:7px;font:inherit;cursor:pointer}.menu button:hover{background:var(--bg)}
+.menu .mut{padding:6px 10px 8px;border-bottom:1px solid var(--line);margin-bottom:4px}
+header{flex-wrap:wrap}nav{display:flex;flex-wrap:wrap;order:3;flex-basis:100%}
+@media (min-width:900px){nav{order:0;flex-basis:auto}}
+.pill{display:inline-block;font-size:12px;padding:1px 8px;border-radius:99px;background:var(--bg);border:1px solid var(--line)}
+.pill.ok{color:var(--grn);border-color:currentColor}.pill.off{color:var(--red);border-color:currentColor}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--fg);max-width:380px;width:calc(100% - 32px)}dialog::backdrop{background:#0008}
+dialog input{width:100%;margin-bottom:8px}
+#zoom{position:fixed;inset:0;background:#000d;display:none;align-items:center;justify-content:center;z-index:5}#zoom img{max-width:96vw;max-height:92vh}
+</style>
+</head>
+<body>
+<header><b id="titulo">Casa</b><select id="casa" hidden title="Casa"></select><nav>
+<button data-t="aovivo" data-perm="aovivo">Ao vivo</button><button data-t="eventos" data-perm="eventos" class="on">Eventos</button><button data-t="gravacoes" data-perm="gravacoes">Gravações</button><button data-t="pessoas" data-perm="pessoas">Pessoas</button>
+<button data-t="robo" data-perm="robo" data-robo>Robô</button><button data-t="ajustes" data-perm="ajustes">Ajustes</button><button data-t="perguntar" data-perm="perguntar">Perguntar</button>
+<button data-t="avisos">Avisos</button><button data-t="admin" data-perm="admin">Admin</button></nav>
+<div class="conta"><button id="contab" aria-haspopup="true"><span class="av" id="avatar">?</span><span id="contanome"></span></button>
+  <div class="menu" id="menu"><div class="mut" id="containfo"></div><button onclick="document.querySelector('nav button[data-t=avisos]').click()">Configurar avisos</button><button onclick="abrirSenha()">Trocar minha senha</button><button onclick="sair()">Sair</button></div></div></header>
+<dialog id="dsenha"><form method="dialog" id="fsenha"><b>Trocar minha senha</b><p class="mut">Mínimo de 8 caracteres. Os outros aparelhos conectados saem.</p>
+  <input type="password" id="s-atual" placeholder="Senha atual" autocomplete="current-password">
+  <input type="password" id="s-nova" placeholder="Senha nova" autocomplete="new-password">
+  <input type="password" id="s-nova2" placeholder="Repita a senha nova" autocomplete="new-password">
+  <p id="s-res" class="mut"></p><div class="grid"><button class="b p" value="ok">Salvar</button><button class="b" value="cancelar" formnovalidate>Cancelar</button></div></form></dialog>
+<main>
+<section id="aovivo" hidden>
+  <div class="vivo" id="vivolista"></div>
+  <p class="mut" id="vivodica"></p>
+</section>
+<section id="gravacoes" hidden>
+  <div class="grid" style="margin-bottom:12px"><select id="gcam"></select>
+    <select id="gdia"></select><button class="b" onclick="carregarGravacoes()">Atualizar</button></div>
+  <div class="card"><video id="player" controls playsinline style="width:100%;background:#000;border-radius:8px"></video>
+    <p id="gtitulo" class="mut"></p></div>
+  <div id="glista" class="grid"></div>
+</section>
+<section id="eventos">
+  <div class="card"><b>Alarme</b> <span id="alst" class="mut"></span>
+    <div class="grid" id="alctl" style="margin-top:8px"><select id="almodo" onchange="definirAlarme({modo:this.value})">
+      <option value="normal">Normal (avisa toda pessoa)</option><option value="casa">Em casa (pessoa sem rosto chega silenciosa)</option></select>
+      <button class="b" onclick="definirAlarme({silenciar_horas:1})">Silenciar 1 h</button><button class="b" onclick="definirAlarme({silenciar_horas:8})">8 h</button>
+      <button class="b" onclick="definirAlarme({silenciar_horas:0})">Tirar silêncio</button></div></div>
+  <div class="grid" style="margin-bottom:12px">
+    <select id="filtro"><option value="">Todos</option><option value="estranho">Estranhos</option>
+      <option value="pessoa">Pessoa sem rosto</option><option value="conhecido">Conhecidos</option><option value="sem_pessoa">Falsos alarmes</option></select>
+    <button class="b" onclick="carregarEventos()">Atualizar</button>
+  </div>
+  <div id="lista"></div>
+</section>
+<section id="pessoas" hidden>
+  <div class="card"><b>Cadastrar pessoa da casa</b>
+    <p class="mut">Envie 3 a 10 fotos nítidas do rosto (de frente e de lado). Também dá para nomear rostos direto nos eventos.</p>
+    <form id="fcad" class="grid"><input name="nome" placeholder="Nome" required>
+      <input name="fotos" type="file" accept="image/*" multiple required><button class="b p">Cadastrar</button></form>
+    <p id="cadres" class="mut"></p></div>
+  <div id="plista"></div>
+  <h3 style="margin:20px 0 4px">Celulares da casa (presença)</h3>
+  <p class="mut" style="margin-top:0">Indique de quem é cada celular. É só informativo (aparece no topo de Eventos): avisos não são silenciados por celular na rede, para não esconder alguém que entre junto.
+    Dica: no Android, deixe o Wi-Fi de casa com "MAC do aparelho" (não aleatório) para o celular ser sempre reconhecido.</p>
+  <div id="prlista"></div>
+  <h3 style="margin:20px 0 4px">Rostos a identificar</h3>
+  <p class="mut" style="margin-top:0">Rostos dos eventos ainda sem nome, agrupados quando parecem ser a mesma pessoa. Desmarque as fotos que não são dela, escreva o nome e salve: ela passa a ser reconhecida.</p>
+  <datalist id="nomes"></datalist>
+  <div id="grupos"></div>
+</section>
+<section id="robo" hidden>
+  <div class="card"><b>Mapa</b> <span id="mapats" class="mut"></span>
+    <div id="mapabox" class="mapa"><img id="mapaimg" alt="mapa do robô"><div id="mapaetq"></div></div>
+    <p class="mut" style="margin:6px 0">Toque nos cômodos para marcar. Segure (ou clique com o botão direito) para renomear.</p>
+    <div class="grid"><button class="b p" onclick="limparComodos()">Limpar cômodos marcados</button>
+      <button class="b" onclick="atualizarMapa()">Atualizar mapa</button></div></div>
+  <div class="card"><b>Assistente de limpeza (IA)</b>
+    <p class="mut" style="margin:4px 0 8px">Ex.: "limpe a cozinha e a sala toda segunda e quinta às 10h, turbo e passando pano" ·
+      "nos fins de semana só aspirar o quarto, silencioso, às 15h" · "apague a rotina da noite" · "passe pano na cozinha agora".</p>
+    <textarea id="iatexto" rows="2" style="width:100%"></textarea>
+    <div class="grid" style="margin-top:6px"><button class="b p" onclick="pedirIA()">Planejar</button></div>
+    <div id="iaprop"></div></div>
+  <div class="card"><b>Rotinas</b> <span class="mut">(executadas pela VPS no horário; o PC de casa precisa estar ligado)</span>
+    <div id="rotlista" style="margin-top:8px"></div>
+    <details id="rotform" style="margin-top:8px"><summary style="cursor:pointer"><b>Nova rotina / editar</b></summary>
+      <div class="grid" style="margin-top:8px"><input id="rf-nome" placeholder="Nome (ex.: Cozinha manhã)"><input id="rf-hora" type="time" value="10:00"></div>
+      <div id="rf-dias" class="grid" style="margin-top:6px"></div>
+      <div class="mut" style="margin-top:6px">Cômodos (nenhum marcado = casa inteira):</div><div id="rf-comodos" class="grid"></div>
+      <div class="grid" style="margin-top:6px">
+        <select id="rf-modo"><option value="">Modo: não mexer</option><option value="0">Aspirar</option><option value="1">Aspirar e pano</option><option value="2">Só pano</option><option value="3">Aspirar, depois pano</option></select>
+        <select id="rf-succao"><option value="">Sucção: não mexer</option><option value="0">Silenciosa</option><option value="1">Padrão</option><option value="2">Média</option><option value="3">Turbo</option></select>
+        <select id="rf-agua"><option value="">Água: não mexer</option><option value="0">Pouca</option><option value="1">Média</option><option value="2">Muita</option></select>
+        <select id="rf-repetir"><option value="">Passadas: não mexer</option><option value="0">Uma</option><option value="1">Duas</option></select>
+        <select id="rf-trajeto"><option value="">Trajeto: não mexer</option><option value="0">Em S</option><option value="1">Em Y</option></select></div>
+      <div class="grid" style="margin-top:8px"><button class="b p" onclick="salvarRotina()">Salvar rotina</button><button class="b" onclick="limparForm()">Limpar formulário</button></div>
+    </details></div>
+  <div class="card"><b>Controle remoto</b> <span class="mut">(o robô anda enquanto você manda; "Parar" para)</span>
+    <div class="pad"><span></span><button class="b" onclick="remoto('frente')">▲</button><span></span>
+      <button class="b" onclick="remoto('esquerda')">◀</button><button class="b" onclick="remoto('parar')">■</button><button class="b" onclick="remoto('direita')">▶</button>
+      <span></span><button class="b" onclick="remoto('re')">▼</button><button class="b" onclick="remoto('sair')">Sair</button></div></div>
+  <div id="disp-robo"></div>
+  <div class="card"><b>Últimos comandos</b><div id="cmds" class="mut"></div></div>
+</section>
+<section id="ajustes" hidden>
+  <div id="ajdisp"><div class="grid" style="margin-bottom:12px"><select id="ajalvo"></select>
+    <button class="b" onclick="carregarAjustes()">Atualizar</button></div>
+  <p class="mut">As mudanças vão pela rede de casa (PC → câmera). A Garagem responde devagar: o valor novo pode levar até 1 min para aparecer.</p>
+  <div id="disp-ajustes"></div></div>
+</section>
+<section id="perguntar" hidden>
+  <div class="card"><b>Uso da IA</b> <span id="usomodelo" class="mut"></span>
+    <div id="usolista" style="margin-top:8px"></div></div>
+  <div class="card"><textarea id="perg" rows="3" style="width:100%" placeholder="Ex.: alguém desconhecido apareceu esta semana à noite?"></textarea>
+    <div class="grid" style="margin-top:8px"><select id="pcasa"><option value="">Todas as casas</option></select><select id="dias"><option value="1">Hoje</option><option value="7" selected>7 dias</option><option value="30">30 dias</option></select>
+    <button class="b p" onclick="perguntar()">Perguntar</button></div>
+    <p id="resp" style="white-space:pre-wrap"></p></div>
+</section>
+<section id="avisos" hidden>
+  <div class="card"><b>Avisos neste aparelho</b> <span class="mut">(sem instalar app: chega como notificação do celular)</span>
+    <div id="pushestado" style="margin-top:8px"></div></div>
+  <div class="card"><b>O que avisar</b> <span class="mut">(vale para todos os seus aparelhos)</span>
+    <div id="pushprefs" style="margin-top:8px"></div>
+    <div class="grid" style="margin-top:8px"><button class="b p" onclick="salvarPrefs()">Salvar</button><span id="prefres" class="mut"></span></div></div>
+  <div class="card"><b>Meus aparelhos</b><div id="pushaparelhos" style="margin-top:8px"></div></div>
+  <div class="card"><b>Últimos avisos</b> <span class="mut">(o caminho de cada aviso até os seus aparelhos)</span><div id="pushhist" style="margin-top:8px"></div></div>
+  <details class="card"><summary style="cursor:pointer"><b>Alternativa: app ntfy</b> <span class="mut">(para quem prefere um app de avisos)</span></summary>
+    <div id="ntfyinfo" class="mut" style="margin-top:8px"></div></details>
+</section>
+<section id="admin" hidden>
+  <div class="grid" id="admnav" style="margin-bottom:12px">
+    <button class="b p" data-a="usuarios">Usuários</button><button class="b" data-a="perfis">Perfis</button><button class="b" data-a="casas">Casas e câmeras</button>
+    <button class="b" data-a="pontes">Pontes</button><button class="b" data-a="sistema">IA e resumo</button><button class="b" data-a="acessos">Acessos</button></div>
+  <div data-ap="usuarios">
+    <div class="card"><b>Usuários</b> <span class="mut">(o perfil diz o que cada um pode fazer; as casas, o que vê)</span><div id="uslista" style="margin-top:8px"></div></div>
+    <div class="card" id="usform"><b id="ustitulo">Novo usuário</b>
+      <div class="grid" style="margin-top:8px"><input id="u-login" placeholder="usuário (ex.: mae)" autocomplete="off" autocapitalize="none"><input id="u-nome" placeholder="Nome (ex.: Mãe)">
+        <input id="u-senha" type="password" placeholder="Senha (mín. 8)" autocomplete="new-password"><select id="u-perfil"></select></div>
+      <div id="u-casas" class="grid" style="margin-top:8px"></div>
+      <label style="display:block;margin-top:6px" id="u-ativo-l" hidden><input type="checkbox" id="u-ativo" checked> Ativo (desmarque para bloquear o acesso sem apagar)</label>
+      <div class="grid" style="margin-top:8px"><button class="b p" onclick="salvarUsuario()">Salvar</button><button class="b" onclick="limparUsuario()">Limpar</button></div>
+      <p class="mut" id="usres"></p></div></div>
+  <div data-ap="perfis" hidden>
+    <div class="card"><b>Perfis</b> <span class="mut">(conjuntos de permissões; crie quantos quiser, ex.: "Caseiro", "Vizinho")</span><div id="pflista" style="margin-top:8px"></div></div>
+    <div class="card"><b id="pftitulo">Novo perfil</b><div class="grid" style="margin-top:8px"><input id="pf-nome" placeholder="Nome do perfil"></div>
+      <div id="pf-perms" style="margin-top:8px"></div>
+      <div class="grid" style="margin-top:8px"><button class="b p" onclick="salvarPerfil()">Salvar perfil</button><button class="b" onclick="limparPerfil()">Limpar</button></div></div></div>
+  <div data-ap="casas" hidden>
+    <p class="mut">Cada câmera pertence a uma casa. "Pelo PC" = vídeo vem do PC de casa (configurado lá); "pelo celular-ponte" = o celular da casa busca a câmera na rede local. Mudar câmeras reinicia o ao vivo por alguns segundos.</p>
+    <div id="casaslista"></div>
+    <div class="grid"><button class="b" onclick="novaCasa()">+ Nova casa</button><button class="b p" onclick="salvarCasas()">Salvar casas e câmeras</button><span id="casasres" class="mut"></span></div></div>
+  <div data-ap="pontes" hidden>
+    <div class="card"><b>Celulares-ponte</b> <span class="mut">(levam o vídeo das casas sem PC até o servidor)</span><div id="pontelista" style="margin-top:8px"></div>
+      <div class="grid" style="margin-top:8px"><a class="b p" href="/configurar-ponte">Configurar um celular</a></div>
+      <p class="mut">Abra "Configurar um celular" <b>no próprio celular</b> que vai ficar na casa: ele baixa o Termux pelo site, copia um comando pronto e mostra cada passo.</p></div></div>
+  <div data-ap="sistema" hidden>
+    <div class="card"><b>IA nos eventos</b>
+      <div class="ctl"><span>Modelo que descreve os eventos</span><div class="v"><select id="sy-modelo"></select></div></div>
+      <div class="ctl"><span>Analisar também moradores reconhecidos<br><span class="mut">Liga a detecção de atividade suspeita de quem foi reconhecido; aumenta o gasto (~metade das chamadas).</span></span><div class="v"><input type="checkbox" id="sy-conhecidos"></div></div></div>
+    <div class="card"><b>Resumo do dia</b>
+      <div class="ctl"><span>Enviar um resumo por casa</span><div class="v"><input type="checkbox" id="sy-resumo"> <input type="time" id="sy-hora"></div></div></div>
+    <div class="grid"><button class="b p" onclick="salvarSistema()">Salvar</button><span id="syres" class="mut"></span></div></div>
+  <div data-ap="acessos" hidden>
+    <div class="card"><b>Aparelhos conectados</b> <span class="mut">(sessões abertas; encerre a de um aparelho perdido)</span><div id="sesslista" style="margin-top:8px"></div></div>
+    <div class="card"><b>Últimas entradas</b><div id="acelista" class="mut" style="margin-top:8px"></div></div></div>
+</section>
+</main>
+<div id="zoom" onclick="this.style.display='none'"><img></div>
+<script>
+let QUIETO=false; // ligado só durante o polling de fundo: falhas não viram alert()
+const $=s=>document.querySelector(s), api=(u,o)=>{const quieto=QUIETO;return fetch(u,o).then(async r=>{if(r.status===401){location.href='/login';throw new Error('login')}if(!r.ok){let m=r.status;try{const j=await r.json();m=j.detail?(typeof j.detail==='string'?j.detail:JSON.stringify(j.detail)):m}catch(e){}if(!quieto)alert('Erro no servidor: '+m);throw new Error(m)}return r.json()})};
+const ROT={estranho:'Desconhecido',pessoa:'Pessoa sem rosto',conhecido:'Conhecido',provavel:'Provável morador (aparência)',visita:'Morador (mesma passagem)',pessoa_familiar:'Sem rosto, junto de morador',sem_pessoa:'Falso alarme'};
+const ST=['dormindo','em espera','pausado','voltando à base','carregando','aspirando','aspirando e passando pano','passando pano','atualizando','lavando o mop','secando o mop','coletando o pó','secagem pausada'];
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const js=v=>esc(JSON.stringify(v)); // valor seguro dentro de onclick="..." (aspas, apóstrofo, < >)
+let EU=null, CASA=null;
+const casaAtual=()=>EU.casas.find(c=>c.id===CASA)||EU.casas[0];
+function abrirAba(t){const b=document.querySelector(`nav button[data-t="${t}"]`);document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('main>section').forEach(s=>s.hidden=s.id!==t);vivo(t==='aovivo')}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{abrirAba(b.dataset.t);
+  ({eventos:carregarEventos,pessoas:carregarPessoas,robo:carregarRobo,gravacoes:carregarGravacoes,ajustes:carregarAjustes,perguntar:carregarUso,avisos:()=>carregarAvisos(),admin:()=>carregarAdmin()})[b.dataset.t]?.()});
+const pode=p=>EU&&EU.perms.includes(p);
+function zoom(src){$('#zoom img').src=src;$('#zoom').style.display='flex'}
+const MODOS={normal:'Normal',casa:'Em casa'};
+function textoAlarme(a){const s=a.silencio?` · silenciado até ${new Date(a.silencio_ate*1000).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`:'';
+  return `· modo ${MODOS[a.modo]||a.modo}${a.em_casa.length?' · celulares em casa: '+a.em_casa.map(esc).join(', '):''}${s}`}
+async function carregarAlarme(){const a=await api('/api/alarme?casa='+CASA);$('#almodo').value=a.modo;$('#alst').textContent=textoAlarme(a);return a}
+async function definirAlarme(b){const a=await post('/api/alarme',{...b,casa:CASA});$('#almodo').value=a.modo;$('#alst').textContent=textoAlarme(a)}
+async function carregarPresenca(){const p=await api('/api/presenca'), fmt=s=>s<90?`${s}s`:s<5400?`${Math.round(s/60)} min`:`${Math.round(s/3600)} h`;
+  $('#prlista').innerHTML=p.dispositivos.map(d=>`<div class="ctl"><span>${d.dono?`<b>${esc(d.dono)}</b> · `:''}${esc(d.nome||'(sem nome)')} <span class="mut">${esc(d.ip)} · ${esc(d.mac)} · visto há ${fmt(d.ha_s)}</span></span>
+    <div class="v"><input list="nomes" value="${esc(d.dono)}" placeholder="de quem?" onchange="donoCelular(${js(d.mac)},this.value)"></div></div>`).join('')||'<p class="mut">O agente ainda não enviou a lista da rede.</p>'}
+async function donoCelular(mac,dono){await post('/api/presenca/dono',{mac,dono});carregarPresenca()}
+let PESSOAS=[];
+async function identificar(id,nome){await post(`/api/eventos/${id}/identificar`,{nome});carregarEventos()}
+let CHAVE_EV='';
+async function carregarEventos(){carregarAlarme().catch(()=>{});PESSOAS=pode('identificar')?(await api('/api/pessoas')).map(p=>p.nome):[];
+  const evs=await api('/api/eventos?limite=80&casa='+CASA+'&tipo='+$('#filtro').value), NC=casaAtual().cameras;
+  // só re-renderiza quando algo mudou (o polling de 30 s não faz a lista pular)
+  const chave=JSON.stringify([CASA,PESSOAS,evs.map(e=>[e.id,e.tipo,e.suspeito,e.descricao,e.conhecidos,e.rostos.map(r=>[r.id,r.nome])])]);
+  if(chave===CHAVE_EV&&$('#lista').innerHTML)return;CHAVE_EV=chave;
+  $('#lista').innerHTML=evs.length?evs.map(e=>`<div class="card ev" id="evento-${e.id}">
+    <div class="tira">${e.fotos.map(f=>`<img class="foto" loading="lazy" src="/midia/${f}" onclick="zoom(this.src)">`).join('')}</div>
+    <div><span class="tag ${e.tipo}">${ROT[e.tipo]||e.tipo}</span>${e.suspeito?'<span class="tag estranho">suspeito</span>':''}
+      <span class="mut">${new Date(e.ts*1000).toLocaleString('pt-BR')} · ${esc(NC[e.camera]||e.camera)}</span>
+      <p>${esc(e.descricao)||'<span class="mut">sem descrição</span>'}</p>
+      <button class="b" onclick="verGravacao(${js(e.camera)},${e.ts})">Ver gravação</button>
+      ${['pessoa','provavel','pessoa_familiar','visita','estranho'].includes(e.tipo)?PESSOAS.map(n=>`<button class="b" onclick="identificar(${e.id},${js(n)})">É ${esc(n)}</button>`).join(''):''}
+      ${e.conhecidos.length?`<p class="mut">Reconhecido: ${e.conhecidos.map(esc).join(', ')}</p>`:''}
+      <div class="rostos">${e.rostos.map(r=>`<div class="rosto"><img src="/midia/${r.img}" loading="lazy">${r.nome?esc(r.nome):pode('identificar')?`<a href="#" onclick="nomear(${r.id});return false">Quem é?</a>`:'?'}
+        <div class="mut">${(r.sim*100).toFixed(0)}%</div></div>`).join('')}</div></div></div>`).join(''):'<p class="mut">Nenhum evento ainda.</p>';
+  if(location.hash){try{document.querySelector(location.hash)?.scrollIntoView()}catch(e){}history.replaceState(null,'',location.pathname)}
+}
+// polling de fundo dos eventos: sem alert() em falha, aviso discreto no topo
+function semConexao(on){const el=$('#alst'), t=' · sem conexão com o servidor; tentando de novo…';if(on){if(!el.textContent.includes(t))el.textContent+=t}else el.textContent=el.textContent.replace(t,'')}
+async function pollEventos(){if(document.hidden||$('#eventos').hidden)return;QUIETO=true;try{await carregarEventos();semConexao(false)}catch(e){semConexao(true)}finally{QUIETO=false}}
+$('#filtro').onchange=carregarEventos;
+async function nomear(id){const nome=prompt('Nome desta pessoa (ela passa a ser conhecida):');if(!nome)return;
+  await api(`/api/rostos/${id}/nomear`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome})});carregarEventos()}
+async function carregarPessoas(){const ps=await api('/api/pessoas');$('#nomes').innerHTML=ps.map(p=>`<option value="${esc(p.nome)}">`).join('');carregarGrupos();carregarPresenca();
+  $('#plista').innerHTML=ps.map(p=>`<div class="card grid" style="align-items:center">${p.foto?`<img src="/midia/${p.foto}" style="width:48px;height:48px;border-radius:8px;object-fit:cover">`:''}
+    <b style="margin-right:auto">${esc(p.nome)}</b><span class="mut">${p.rostos} rosto(s)</span>
+    <button class="b" onclick="verRostos(${p.id})">Ver rostos</button>
+    <button class="b" onclick="apagar(${p.id},${js(p.nome)})">Remover</button>
+    <div id="pr-${p.id}" class="rostos" style="flex-basis:100%"></div></div>`).join('')||'<p class="mut">Ninguém cadastrado: todo rosto será tratado como desconhecido.</p>'}
+async function verRostos(pid){const el=$('#pr-'+pid);if(el.innerHTML){el.innerHTML='';return}
+  const rs=await api(`/api/pessoas/${pid}/rostos`);
+  el.innerHTML=rs.map(r=>`<div class="rosto"><img src="/midia/${r.img}" title="${r.evento_id?'câmera '+esc(r.camera||'')+' · '+new Date(r.ts*1000).toLocaleString('pt-BR'):'foto do cadastro'}">
+    <span class="mut">${r.evento_id?esc(r.camera||'câmera'):'cadastro'}</span> <a href="#" onclick="removerRosto(${r.id},${pid});return false">✕</a></div>`).join('')||'<span class="mut">sem rostos</span>'}
+async function removerRosto(rid,pid){if(!confirm('Tirar este rosto do cadastro? (use para foto ruim ou de outra pessoa)'))return;
+  await post(`/api/rostos/${rid}/remover`,{});$('#pr-'+pid).innerHTML='';verRostos(pid)}
+async function apagar(id,nome){if(confirm('Remover '+nome+'?')){await api('/api/pessoas/'+id,{method:'DELETE'});carregarPessoas()}}
+$('#fcad').onsubmit=async ev=>{ev.preventDefault();$('#cadres').textContent='Processando…';
+  try{const r=await api('/api/pessoas',{method:'POST',body:new FormData(ev.target)});
+    $('#cadres').textContent=`${r.rostos_cadastrados} rosto(s) cadastrado(s).`+(r.ignoradas.length?' Ignoradas: '+r.ignoradas.join('; '):'');ev.target.reset();carregarPessoas()}
+  catch(e){if($('#cadres').textContent==='Processando…')$('#cadres').textContent='Não deu: '+(e.message||e)}};
+let CAT=null;
+async function catalogo(){return CAT||(CAT=await api('/api/catalogo'))}
+const post=(u,b)=>api(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
+function controle(alvo,p,v){
+  const val=v===undefined?'':v, id=`c-${alvo}-${p.id.replace('.','_')}`, un=p.unidade?` ${p.unidade}`:'';
+  if(p.so_leitura){const t=p.tipo==='enum'?(p.opcoes[String(v)]??v):v;return `<span>${v===undefined?'—':esc(t)}${v===undefined?'':un}</span>`}
+  if(p.tipo==='bool')return `<input type="checkbox" id="${id}" ${v?'checked':''} onchange="definir('${alvo}','${p.id}',this.checked)">`;
+  if(p.tipo==='enum')return `<select onchange="definir('${alvo}','${p.id}',+this.value)">${v===undefined?'<option selected>—</option>':''}${Object.entries(p.opcoes).map(([k,t])=>`<option value="${k}" ${String(v)===k?'selected':''}>${esc(t)}</option>`).join('')}</select>`;
+  const tipo=p.tipo==='num'?'number':'text';
+  return `<input type="${tipo}" id="${id}" value="${esc(val)}" ${p.min!=null?`min="${p.min}" max="${p.max}"`:''} placeholder="${esc(p.dica||'')}">${un}
+    <button class="b" onclick="definir('${alvo}','${p.id}',${tipo==='number'?'+':''}document.getElementById('${id}').value)">OK</button>`}
+async function renderDisp(alvo,alvoEl){
+  const [cat,st]=await Promise.all([catalogo(),api('/api/estado')]), d=cat[alvo], e=st['disp:'+alvo], v=e?.valor||{};
+  const idade=e?Math.round(Date.now()/1000-e.ts):null;
+  alvoEl.innerHTML=`<p class="mut">${e?`Lido do aparelho há ${idade}s`:'O agente ainda não enviou o estado deste aparelho.'}</p>`+d.grupos.map(g=>`<div class="card"><b>${esc(g.nome)}</b>
+    ${(g.props||[]).map(p=>`<div class="ctl ${p.destaque?'destaque':''}"><span>${esc(p.nome)}${p.so_grava?' <span class="mut">(sem leitura)</span>':''}</span><div class="v">${controle(alvo,p,v[p.id])}</div></div>`).join('')}
+    ${(g.acoes||[]).length?`<div class="grid" style="margin-top:8px">${g.acoes.map(a=>`<button class="b" onclick='executar(${JSON.stringify(alvo)},${JSON.stringify(a)})'>${esc(a.nome)}</button>`).join('')}</div>`:''}</div>`).join('')}
+async function aguardar(cid,recarregar){for(let i=0;i<20;i++){await new Promise(r=>setTimeout(r,1500));const c=(await api('/api/comandos')).find(x=>x.id===cid);
+  if(c&&c.status!=='pendente'&&c.status!=='enviado'){if(c.status!=='feito')alert('O aparelho recusou: '+(c.resultado||c.status));recarregar();return}}alert('Sem resposta do PC de casa (agente desligado?).')}
+async function definir(alvo,id,valor){const r=await post(`/api/disp/${alvo}/set`,{id,valor});aguardar(r.id,()=>alvo==='robo'?carregarRobo():carregarAjustes())}
+async function executar(alvo,a){if(a.confirmar&&!confirm(a.confirmar))return;const r=await post(`/api/disp/${alvo}/acao`,{id:a.id,args:a.args??null});
+  aguardar(r.id,()=>alvo==='robo'?carregarRobo():carregarAjustes())}
+async function remoto(cmd){await post('/api/disp/robo/remoto',{cmd})}
+async function carregarAjustes(){const c=casaAtual();
+  if(!c.ajustes.length){$('#disp-ajustes').innerHTML='<p class="mut">Esta casa não tem aparelhos com ajustes pelo painel.</p>';return}
+  await renderDisp($('#ajalvo').value,$('#disp-ajustes'))}
+const desde=t=>{const s=Date.now()/1000-t;return s<90?`${Math.round(s)} s`:s<5400?`${Math.round(s/60)} min`:s<172800?`${Math.round(s/3600)} h`:`${Math.round(s/86400)} dias`};
+$('#ajalvo').onchange=carregarAjustes;
+const marcadosMapa=new Set();
+async function carregarMapa(){let m;try{m=await api('/api/mapa')}catch(e){return}
+  $('#mapats').textContent=m.ts?`· atualizado ${new Date(m.ts*1000).toLocaleString('pt-BR')}`:'· ainda não chegou';
+  if(m.ts)$('#mapaimg').src='/mapa/robo.png?t='+Math.round(m.ts);
+  $('#mapaetq').innerHTML=m.comodos.filter(c=>c.x!=null).map(c=>`<span class="etq ${marcadosMapa.has(c.id)?'on':''}" style="left:${c.x}%;top:${c.y}%"
+    onclick="marcarComodo(${c.id},this)" oncontextmenu="renomearComodo(${c.id},${js(c.nome)});return false">${esc(c.nome)}</span>`).join('')}
+function marcarComodo(id,el){marcadosMapa.has(id)?marcadosMapa.delete(id):marcadosMapa.add(id);el.classList.toggle('on')}
+async function renomearComodo(id,atual){const nome=prompt('Nome do cômodo:',atual);if(nome==null)return;await post('/api/mapa/nome',{id,nome});carregarMapa()}
+async function limparComodos(){if(!marcadosMapa.size)return alert('Marque ao menos um cômodo no mapa.');
+  const r=await post('/api/robo/comodos',{ids:[...marcadosMapa]});marcadosMapa.clear();aguardar(r.id,carregarRobo)}
+async function atualizarMapa(){$('#mapats').textContent='· pedindo o mapa ao robô…';const r=await post('/api/robo/atualizar_mapa',{});
+  await aguardar(r.id,()=>{});setTimeout(carregarMapa,8000)}
+const DIAS=['seg','ter','qua','qui','sex','sáb','dom'], CFG={modo:['Aspirar','Aspirar e pano','Só pano','Aspirar, depois pano'],
+  succao:['Silenciosa','Padrão','Média','Turbo'],agua:['Pouca água','Média água','Muita água'],repetir:['1 passada','2 passadas'],trajeto:['Em S','Em Y']};
+let ROT_EDIT=null, COMODOS=[], PROPOSTA=null;
+const nomeComodo=id=>(COMODOS.find(c=>c.id===id)||{}).nome||('#'+id);
+function descRotina(r){const cfg=Object.entries(r.config||{}).map(([k,v])=>CFG[k]?.[v]).filter(Boolean).join(', ');
+  return `${r.dias.map(d=>DIAS[d]).join(', ')} às ${r.hora} · ${r.comodos.length?r.comodos.map(nomeComodo).join(', '):'casa inteira'}${cfg?' · '+cfg:''}`}
+async function carregarRotinas(){const [rs,m]=await Promise.all([api('/api/rotinas'),api('/api/mapa')]);COMODOS=m.comodos;
+  $('#rotlista').innerHTML=rs.map(r=>`<div class="ctl"><span><b>${esc(r.nome)}</b><br><span class="mut">${esc(descRotina(r))}${r.ultima?' · última '+new Date(r.ultima*1000).toLocaleString('pt-BR'):''}</span></span>
+    <div class="v"><input type="checkbox" ${r.ativo?'checked':''} title="ativa" onchange="ativarRotina(${r.id},this.checked)">
+    <button class="b" onclick="editarRotina(${r.id})">Editar</button><button class="b" onclick="rodarRotina(${r.id})">Agora</button>
+    <button class="b" onclick="apagarRotina(${r.id})">✕</button></div></div>`).join('')||'<p class="mut">Nenhuma rotina ainda.</p>';
+  window._ROTS=rs;
+  $('#rf-dias').innerHTML=DIAS.map((d,i)=>`<label><input type="checkbox" value="${i}"> ${d}</label>`).join('');
+  $('#rf-comodos').innerHTML=COMODOS.map(c=>`<label><input type="checkbox" value="${c.id}"> ${esc(c.nome)}</label>`).join('')||'<span class="mut">o mapa ainda não chegou</span>'}
+function formRotina(){const v=id=>$('#rf-'+id).value, cfg={};['modo','succao','agua','repetir','trajeto'].forEach(k=>{if(v(k)!=='')cfg[k]=+v(k)});
+  return {nome:v('nome')||'Rotina',hora:v('hora'),ativo:true,dias:[...document.querySelectorAll('#rf-dias input:checked')].map(i=>+i.value),
+    comodos:[...document.querySelectorAll('#rf-comodos input:checked')].map(i=>+i.value),config:cfg}}
+function limparForm(){ROT_EDIT=null;$('#rf-nome').value='';$('#rf-hora').value='10:00';document.querySelectorAll('#rotform input[type=checkbox]').forEach(i=>i.checked=false);
+  ['modo','succao','agua','repetir','trajeto'].forEach(k=>$('#rf-'+k).value='')}
+function editarRotina(id){const r=window._ROTS.find(x=>x.id===id);limparForm();ROT_EDIT=id;$('#rf-nome').value=r.nome;$('#rf-hora').value=r.hora;
+  document.querySelectorAll('#rf-dias input').forEach(i=>i.checked=r.dias.includes(+i.value));document.querySelectorAll('#rf-comodos input').forEach(i=>i.checked=r.comodos.includes(+i.value));
+  Object.entries(r.config).forEach(([k,v])=>$('#rf-'+k).value=String(v));$('#rotform').open=true;$('#rotform').scrollIntoView({behavior:'smooth'})}
+async function salvarRotina(){const r=formRotina();if(ROT_EDIT){const old=window._ROTS.find(x=>x.id===ROT_EDIT);r.ativo=old.ativo;
+    await api('/api/rotinas/'+ROT_EDIT,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(r)})}else await post('/api/rotinas',r);
+  limparForm();$('#rotform').open=false;carregarRotinas()}
+async function ativarRotina(id,on){const r={...window._ROTS.find(x=>x.id===id),ativo:on};await api('/api/rotinas/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(r)});carregarRotinas()}
+async function apagarRotina(id){if(confirm('Apagar esta rotina?')){await api('/api/rotinas/'+id,{method:'DELETE'});carregarRotinas()}}
+async function rodarRotina(id){if(confirm('Executar esta rotina agora?')){await post(`/api/rotinas/${id}/executar`,{});setTimeout(carregarRobo,3000)}}
+async function pedirIA(){const texto=$('#iatexto').value.trim();if(!texto)return;$('#iaprop').innerHTML='<p class="mut">Planejando…</p>';
+  if(!COMODOS.length)await carregarRotinas();
+  PROPOSTA=await post('/api/robo/ia',{texto});
+  const ROT={criar:'Criar',alterar:'Alterar',apagar:'Apagar',executar_agora:'Limpar agora'};
+  $('#iaprop').innerHTML=`<p>${esc(PROPOSTA.resposta)}</p>`+(PROPOSTA.operacoes.length?`<ul>${PROPOSTA.operacoes.map(o=>`<li><b>${ROT[o.tipo]||o.tipo}${o.id?' #'+o.id:''}</b>: ${esc(o.rotina.nome)} — ${esc(o.tipo==='executar_agora'?(o.rotina.comodos.length?o.rotina.comodos.map(nomeComodo).join(', '):'casa inteira'):descRotina(o.rotina))}</li>`).join('')}</ul>
+    <div class="grid"><button class="b p" onclick="aplicarIA()">Aplicar</button><button class="b" onclick="$('#iaprop').innerHTML=''">Descartar</button></div>`:'')}
+async function aplicarIA(){const r=await post('/api/robo/ia/aplicar',{operacoes:PROPOSTA.operacoes});$('#iaprop').innerHTML=`<p class="mut">Feito: ${esc(r.feito.join('; '))}</p>`;$('#iatexto').value='';carregarRotinas()}
+async function carregarRobo(){carregarMapa();carregarRotinas();await renderDisp('robo',$('#disp-robo'));
+  const est=await api('/api/estado'), cods=est.robo_codigos?.valor||{};
+  if(Object.keys(cods).length)$('#disp-robo').insertAdjacentHTML('beforeend',`<div class="card"><b>Códigos de aviso vistos</b>
+    <p class="mut" style="margin:4px 0">Códigos 2xxx mudam conforme o robô e a base trabalham (estados, sem aviso). Códigos de 3 dígitos são falhas reais e geram aviso (584 falta de água, 586 muita água no compartimento). Anote o que o app mostrava para descobrirmos o significado.</p>
+    ${Object.entries(cods).sort((a,b)=>b[1].ultimo-a[1].ultimo).map(([k,c])=>`<div class="ctl"><span><b>${esc(k)}</b> <span class="mut">${c.vezes}× · estados: ${c.estados.map(s=>ST[s]??s).join(', ')}</span></span><span class="mut">${new Date(c.ultimo*1000).toLocaleString('pt-BR')}</span></div>`).join('')}</div>`);
+  const cs=await api('/api/comandos');$('#cmds').innerHTML=cs.map(c=>`${new Date(c.ts*1000).toLocaleTimeString('pt-BR')} · ${esc(c.alvo)} · ${esc(c.acao)} ${esc(c.args||'')} · ${c.status}`).join('<br>')||'nenhum'}
+async function carregarUso(){const u=await api('/api/ia/uso?dias=14');
+  $('#usomodelo').textContent=`· eventos: ${u.modelo_evento} · perguntas/resumo: ${u.modelo} · moradores reconhecidos ${u.analisa_conhecidos?'são':'não são'} analisados`;
+  const dias={};u.por_dia.forEach(r=>{(dias[r.dia]=dias[r.dia]||{ch:0,ent:0,sai:0,c:0,t:[]});const d=dias[r.dia];d.ch+=r.chamadas;d.ent+=r.entrada;d.sai+=r.saida;d.c+=r.custo;d.t.push(`${r.tarefa} ${r.chamadas}`)});
+  const tot=Object.values(dias).reduce((a,d)=>a+d.c,0);
+  $('#usolista').innerHTML=Object.entries(dias).map(([dia,d])=>`<div class="ctl"><span>${new Date(dia+'T12:00').toLocaleDateString('pt-BR')} <span class="mut">${d.ch} chamada(s): ${esc(d.t.join(', '))} · ${(d.ent/1000).toFixed(1)}k entrada / ${(d.sai/1000).toFixed(1)}k saída</span></span><b>US$ ${d.c.toFixed(3)}</b></div>`).join('')
+    +(Object.keys(dias).length?`<p class="mut">Total no período: US$ ${tot.toFixed(2)} (estimativa pela tabela de preços; a fatura oficial está no console da Anthropic).</p>`:'<p class="mut">Ainda sem registros (o contador começou em 30/10).</p>')}
+async function perguntar(){$('#resp').textContent='Pensando…';
+  const r=await api('/api/perguntar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pergunta:$('#perg').value,dias:+$('#dias').value,casa:$('#pcasa').value})});$('#resp').textContent=r.resposta}
+function montarVivo(){const c=casaAtual();
+  $('#vivolista').innerHTML=Object.entries(c.cameras).map(([id,nome])=>`<div class="card"><b>${esc(nome)}</b> <span class="mut" data-vivo-st="${id}"></span><iframe data-src="/ao-vivo/stream.html?src=${id}&mode=mse" allow="autoplay; fullscreen"></iframe>
+    ${c.ptz.includes(id)?`<div class="ptz" data-alvo="${id}"></div>`:''}</div>`).join('');
+  $('#vivodica').textContent=(c.ptz.length?'Setas: cada toque gira um passo. "Passo" escolhe o tamanho. ':'')+'A imagem ao vivo chega com 2–5 s de atraso. '+
+    (c.ponte?'O vídeo passa pelo celular-ponte de lá: sem internet ou energia no celular, não há imagem ao vivo nem gravação.':'O vídeo passa pelo PC de casa. Se o PC estiver desligado, não há imagem ao vivo nem gravação.');
+  document.querySelectorAll('.ptz').forEach(el=>{const a=el.dataset.alvo;
+  el.innerHTML=`<button class="b" onclick="girar('${a}','esquerda')">◀</button><button class="b" onclick="girar('${a}','cima')">▲</button>
+    <button class="b" onclick="girar('${a}','baixo')">▼</button><button class="b" onclick="girar('${a}','direita')">▶</button>
+    <select title="tamanho do passo"><option value="0.3">Passo curto</option><option value="0.6" selected>Passo médio</option><option value="1.5">Passo longo</option></select>
+    <button class="b" onclick="if(confirm('Calibrar? A câmera gira até os limites e volta ao centro.'))girar('${a}','calibrar')">Calibrar</button>`})}
+async function girar(alvo,direcao){const passo=+document.querySelector(`.ptz[data-alvo="${alvo}"] select`).value;
+  try{await post(`/api/disp/${alvo}/ptz`,{direcao,passo})}catch(e){}}
+let VIGIA_VIVO=null;
+function vivo(on){document.querySelectorAll('#aovivo iframe').forEach(f=>{f.src=on?f.dataset.src:'about:blank';f.dataset.desde=Date.now()});
+  clearInterval(VIGIA_VIVO);VIGIA_VIVO=null;if(on){estadoVivo();VIGIA_VIVO=setInterval(vigiarVivo,10000)}}
+// vigia do ao vivo: o stream.html do go2rtc fica preso em "error" (o WebSocket não fecha) ou em "loading" sem fim; recarrega o iframe
+function vigiarVivo(){if(document.hidden||$('#aovivo').hidden)return;estadoVivo();
+  document.querySelectorAll('#aovivo iframe').forEach(f=>{let m='';try{m=(f.contentDocument?.querySelector('video-stream .mode')?.innerText||'').trim().toLowerCase()}catch(e){}
+    if(m==='error'||(m==='loading'&&Date.now()-(+f.dataset.desde||0)>30000)){f.src=f.dataset.src;f.dataset.desde=Date.now()}})}
+// legenda por câmera (só as que chegam por ponte): /api/aovivo/estado → {cam:{enviando,falhando_desde,erro}}
+const causaVivo=e=>/i\/o timeout|não respond|unreachable/i.test(e)?'a câmera não responde na rede do celular (Wi-Fi, energia ou IP da câmera)':/401|403|login|auth/i.test(e)?'conta Xiaomi: falta entrar ou a sessão venceu':'';
+async function estadoVivo(){let st;try{const r=await fetch('/api/aovivo/estado?casa='+CASA);if(!r.ok)return;st=await r.json()}catch(e){return}
+  if(!st||typeof st!=='object')return;
+  document.querySelectorAll('[data-vivo-st]').forEach(el=>{const v=st[el.dataset.vivoSt];if(!v){el.innerHTML='';return}
+    if(v.enviando){el.innerHTML='<span class="pill ok">ao vivo</span>';return}
+    const erro=String(v.erro||''), c=causaVivo(erro);
+    el.innerHTML=`<span class="pill off">sem vídeo</span>${c?' '+esc(c):erro?` <span title="${esc(erro)}">${esc(erro.slice(0,70))}${erro.length>70?'…':''}</span>`:''}${v.falhando_desde?' · há '+desde(v.falhando_desde):''}`})}
+const hhmm=t=>new Date(t*1000).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+async function carregarGravacoes(dia){
+  const cam=$('#gcam').value, r=await api(`/api/gravacoes?camera=${cam}&dia=${dia||$('#gdia').value||''}`);
+  $('#gdia').innerHTML=(r.dias.length?r.dias:[r.dia]).map(d=>`<option ${d===r.dia?'selected':''}>${d}</option>`).join('');
+  $('#glista').innerHTML=r.trechos.map(t=>`<button class="b" onclick="tocar(${js(t.arquivo)},${t.inicio},0)"${t.cartao?' title="Recuperado do cartão SD da câmera (o ao vivo tinha caído)"':''}>${hhmm(t.inicio)}${t.cartao?' 💾':''}</button>`).join('')||'<p class="mut">Nenhuma gravação neste dia.</p>'}
+$('#gcam').onchange=()=>carregarGravacoes();$('#gdia').onchange=()=>carregarGravacoes($('#gdia').value);
+function tocar(arq,ini,off){const v=$('#player');v.src='/gravacoes/'+arq;v.onloadedmetadata=()=>{v.currentTime=off;v.play().catch(()=>{})};
+  $('#gtitulo').textContent=arq.split('/')[0]+' · '+new Date(ini*1000).toLocaleString('pt-BR')}
+async function verGravacao(cam,ts){try{const g=await api(`/api/gravacoes/em?camera=${cam}&ts=${ts}`);
+  abrirAba('gravacoes');$('#gcam').value=cam;await carregarGravacoes(g.arquivo.split('/')[1].slice(0,10));tocar(g.arquivo,g.inicio,g.offset)}
+  catch(e){alert('Sem gravação desse horário (a gravação começou depois ou já foi apagada).')}}
+async function carregarGrupos(){const gs=await api('/api/rostos/grupos');
+  $('#grupos').innerHTML=gs.map(g=>{const s=g.sugestao,pre=s&&s.certeza!=='baixa'?s.nome:(g.reconhecido_como[0]||'');
+   return `<div class="card grupo" id="g${g.id}"><b>${g.total} foto(s)</b> <span class="mut">${esc([...new Set(g.rostos.map(r=>r.camera))].join(', '))} · última ${new Date(Math.max(...g.rostos.map(r=>r.ts))*1000).toLocaleString('pt-BR')}</span>
+    ${s?`<div class="sug ${s.certeza}">${s.certeza==='alta'?'Parece':s.certeza==='duvida'?'Talvez seja':'Pouco parecido com'} ${esc(s.nome)} (${Math.round(s.sim*100)}%)</div>`:''}
+    <div class="fotos">${g.rostos.map(r=>`<label title="${new Date(r.ts*1000).toLocaleString('pt-BR')}"><input type="checkbox" checked value="${r.id}"><img src="/midia/${r.img}" loading="lazy"></label>`).join('')}</div>
+    ${g.total>g.rostos.length?`<p class="mut">Mostrando ${g.rostos.length} de ${g.total}; salvar aplica só às marcadas.</p>`:''}
+    <div class="grid"><input list="nomes" placeholder="Quem é?" value="${esc(pre)}"><button class="b p" onclick="salvarGrupo(${g.id})">Salvar</button>
+    <button class="b" onclick="descartarGrupo(${g.id})">Descartar</button></div></div>`}).join('')||'<p class="mut">Nenhum rosto pendente.</p>'}
+const marcados=id=>[...document.querySelectorAll(`#g${id} .fotos input:checked`)].map(i=>+i.value);
+async function salvarGrupo(id){const nome=document.querySelector(`#g${id} .grid input`).value.trim(),ids=marcados(id);
+  if(!nome||!ids.length)return alert('Escreva o nome e deixe ao menos uma foto marcada.');
+  await api('/api/rostos/nomear-grupo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome,ids})});carregarPessoas()}
+async function descartarGrupo(id){const ids=marcados(id);if(!ids.length||!confirm(`Descartar ${ids.length} foto(s)? Elas saem desta lista e não serão usadas no reconhecimento.`))return;
+  await api('/api/rostos/descartar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids})});carregarGrupos()}
+function aplicarCasa(){const c=casaAtual();CASA=c.id;try{localStorage.setItem('casa',CASA)}catch(e){}
+  $('#titulo').textContent=c.nome;document.title=c.nome;
+  document.querySelectorAll('nav button').forEach(b=>b.hidden=(b.dataset.perm&&!pode(b.dataset.perm))||(b.hasAttribute('data-robo')&&!c.robo));
+  $('#alctl').hidden=!pode('alarme');
+  $('#gcam').innerHTML=Object.entries(c.cameras).map(([id,n])=>`<option value="${id}">${esc(n)}</option>`).join('');
+  $('#ajalvo').innerHTML=c.ajustes.map(id=>`<option value="${id}">${esc(c.cameras[id]||id)}</option>`).join('');
+  montarVivo();const aberta=document.querySelector('nav button.on');
+  const pedida=location.hash==='#avisos'?document.querySelector('nav button[data-t=avisos]'):null;
+  if(pedida){history.replaceState(null,'',location.pathname);pedida.click()}
+  else if(aberta.hidden)[...document.querySelectorAll('nav button')].find(b=>!b.hidden).click();else aberta.click()}
+$('#casa').onchange=()=>{CASA=$('#casa').value;aplicarCasa()};
+$('#contab').onclick=e=>{e.stopPropagation();$('#menu').classList.toggle('on')};document.addEventListener('click',()=>$('#menu').classList.remove('on'));
+async function sair(){await fetch('/api/logout',{method:'POST'});location.href='/login'}
+function abrirSenha(){['atual','nova','nova2'].forEach(k=>$('#s-'+k).value='');$('#s-res').textContent='';$('#dsenha').showModal()}
+$('#fsenha').onsubmit=async ev=>{if(ev.submitter?.value!=='ok')return;ev.preventDefault();
+  if($('#s-nova').value!==$('#s-nova2').value){$('#s-res').textContent='As duas senhas novas não são iguais.';return}
+  const r=await fetch('/api/eu/senha',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({atual:$('#s-atual').value,nova:$('#s-nova').value})});
+  if(r.ok){$('#dsenha').close();alert('Senha trocada.')}else{let m=r.status;try{m=(await r.json()).detail}catch(e){}$('#s-res').textContent=m}};
+(async()=>{EU=await api('/api/eu');
+  $('#contanome').textContent=EU.nome||EU.login;$('#avatar').textContent=(EU.nome||EU.login)[0].toUpperCase();
+  $('#containfo').textContent=`${EU.login} · ${EU.perfil||''} · ${EU.casas.map(c=>c.nome).join(', ')}`;
+  let salva=null;try{salva=localStorage.getItem('casa')}catch(e){}
+  CASA=EU.casas.some(c=>c.id===salva)?salva:EU.casas[0]?.id;
+  if(!CASA){$('main').innerHTML='<p class="mut">Nenhuma casa liberada para este usuário.</p>';return}
+  $('#casa').innerHTML=EU.casas.map(c=>`<option value="${c.id}" ${c.id===CASA?'selected':''}>${esc(c.nome)}</option>`).join('');
+  $('#casa').hidden=EU.casas.length<2;$('#titulo').hidden=EU.casas.length>1;
+  $('#pcasa').innerHTML='<option value="">Todas as casas</option>'+EU.casas.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join('');
+  aplicarCasa();setInterval(pollEventos,30000)})();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
+</script>
+<script src="/static/painel-admin.js"></script>
+</body>
+</html>

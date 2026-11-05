@@ -1,0 +1,151 @@
+{
+  "_doc": "Controles por aparelho, tirados das specs MIoT (docs/spec-*.json). id = 'siid.piid' (propriedade) ou 'siid.aiid' (ação). tipo: bool | enum | num | texto. so_grava: propriedade sem leitura (o valor atual não aparece). O agente lê todas as propriedades legíveis e executa set/ação pela LAN.",
+  "garagem": {
+    "nome": "Garagem",
+    "modelo": "chuangmi.camera.025b02",
+    "ptz": true,
+    "lote": 1,
+    "pausa": 0.5,
+    "grupos": [
+      {"nome": "Câmera", "props": [
+        {"id": "2.1", "nome": "Câmera ligada", "tipo": "bool"},
+        {"id": "3.1", "nome": "Luz indicadora (LED)", "tipo": "bool"},
+        {"id": "2.2", "nome": "Girar imagem", "tipo": "enum", "opcoes": {"0": "Normal", "180": "180°"}},
+        {"id": "2.9", "nome": "Data e hora na imagem", "tipo": "bool"}
+      ]},
+      {"nome": "Imagem noturna", "props": [
+        {"id": "2.3", "nome": "Visão noturna", "tipo": "enum", "opcoes": {"2": "Automática", "0": "Sempre ligada", "1": "Desligada"}},
+        {"id": "2.6", "nome": "Colorida com pouca luz", "tipo": "bool"},
+        {"id": "2.5", "nome": "WDR (contraluz)", "tipo": "bool"}
+      ]},
+      {"nome": "Detecção e gravação na câmera", "props": [
+        {"id": "5.1", "nome": "Detecção de movimento", "tipo": "bool"},
+        {"id": "5.3", "nome": "Sensibilidade", "tipo": "enum", "opcoes": {"0": "Baixa", "1": "Alta"}},
+        {"id": "5.2", "nome": "Intervalo entre alertas", "tipo": "num", "min": 0, "max": 30, "unidade": "min"},
+        {"id": "5.4", "nome": "Detecção começa às", "tipo": "texto", "dica": "HH:MM"},
+        {"id": "5.5", "nome": "Detecção termina às", "tipo": "texto", "dica": "HH:MM"},
+        {"id": "2.7", "nome": "Gravação no cartão SD", "tipo": "enum", "opcoes": {"0": "Contínua", "1": "Só com movimento", "2": "Desligada"}}
+      ]},
+      {"nome": "Cartão SD", "props": [
+        {"id": "4.1", "nome": "Situação do cartão", "tipo": "num", "so_leitura": true},
+        {"id": "4.2", "nome": "Espaço total", "tipo": "num", "so_leitura": true, "unidade": "MB"},
+        {"id": "4.3", "nome": "Espaço livre", "tipo": "num", "so_leitura": true, "unidade": "MB"}
+      ], "acoes": [
+        {"id": "4.1", "nome": "Formatar cartão SD", "confirmar": "Apaga TODAS as gravações do cartão SD da Garagem. Continuar?"},
+        {"id": "4.2", "nome": "Ejetar cartão SD", "confirmar": "Ejetar o cartão SD da Garagem?"}
+      ]}
+    ]
+  },
+  "cw300": {
+    "nome": "CW300",
+    "modelo": "mxiang.camera.moc001",
+    "ptz": true,
+    "grupos": [
+      {"nome": "Alerta", "props": [
+        {"id": "2.16", "nome": "Sirene e luz AGORA (manual)", "tipo": "bool", "destaque": true},
+        {"id": "2.15", "nome": "Sirene e luz automáticas com pessoa", "tipo": "bool"},
+        {"id": "18.3", "nome": "Usar luz no alerta", "tipo": "bool"},
+        {"id": "18.4", "nome": "Usar som no alerta", "tipo": "bool"},
+        {"id": "18.6", "nome": "Modo da luz", "tipo": "enum", "opcoes": {"1": "Pisca devagar", "2": "Pisca rápido", "3": "Fixa"}},
+        {"id": "16.1", "nome": "Luz branca", "tipo": "bool"}
+      ]},
+      {"nome": "Câmera", "props": [
+        {"id": "2.1", "nome": "Câmera ligada", "tipo": "bool"},
+        {"id": "4.1", "nome": "Luz indicadora (LED)", "tipo": "bool"},
+        {"id": "2.4", "nome": "Girar imagem", "tipo": "enum", "opcoes": {"0": "Normal", "90": "90°", "180": "180°", "270": "270°"}},
+        {"id": "2.5", "nome": "Data e hora na imagem", "tipo": "bool"},
+        {"id": "2.14", "nome": "Correção de distorção", "tipo": "bool"},
+        {"id": "2.18", "nome": "Frequência da rede elétrica", "tipo": "enum", "opcoes": {"0": "50 Hz", "1": "60 Hz (Brasil)"}},
+        {"id": "21.1", "nome": "Área de privacidade", "tipo": "bool"}
+      ], "acoes": [
+        {"id": "2.1", "nome": "Calibrar o giro (PTZ)", "confirmar": "A câmera vai girar até os limites para se recalibrar. Continuar?"},
+        {"id": "2.2", "nome": "Reiniciar a câmera", "confirmar": "Reiniciar a CW300? Ela fica fora do ar por cerca de 1 minuto."}
+      ]},
+      {"nome": "Imagem noturna", "props": [
+        {"id": "2.3", "nome": "Visão noturna", "tipo": "enum", "opcoes": {"2": "Automática", "1": "Ligada", "0": "Desligada"}}
+      ]},
+      {"nome": "Detecção e gravação na câmera", "props": [
+        {"id": "2.9", "nome": "Seguir pessoa (giro automático)", "tipo": "bool"},
+        {"id": "2.10", "nome": "Moldura de IA na imagem", "tipo": "bool"},
+        {"id": "8.14", "nome": "Detecção de pessoa", "tipo": "bool"},
+        {"id": "8.15", "nome": "Detecção de movimento (IA)", "tipo": "bool"},
+        {"id": "5.1", "nome": "Detecção de movimento", "tipo": "bool"},
+        {"id": "5.3", "nome": "Sensibilidade", "tipo": "enum", "opcoes": {"0": "Baixa", "1": "Média", "2": "Alta"}},
+        {"id": "5.2", "nome": "Intervalo entre alertas", "tipo": "num", "min": 1, "max": 30, "unidade": "min"},
+        {"id": "5.4", "nome": "Detecção começa às", "tipo": "texto", "dica": "HH:MM"},
+        {"id": "5.5", "nome": "Detecção termina às", "tipo": "texto", "dica": "HH:MM"},
+        {"id": "2.11", "nome": "Gravação no cartão SD", "tipo": "enum", "opcoes": {"2": "Contínua", "1": "Só com movimento", "0": "Desligada"}},
+        {"id": "2.12", "nome": "Armazenamento local", "tipo": "bool"}
+      ]},
+      {"nome": "Cartão SD", "acoes": [
+        {"id": "3.1", "nome": "Formatar cartão SD", "confirmar": "Apaga TODAS as gravações do cartão SD da CW300. Continuar?"},
+        {"id": "3.2", "nome": "Ejetar cartão SD", "confirmar": "Ejetar o cartão SD da CW300?"}
+      ]}
+    ]
+  },
+  "robo": {
+    "nome": "Robson",
+    "modelo": "xiaomi.vacuum.c101",
+    "grupos": [
+      {"nome": "Situação", "props": [
+        {"id": "2.1", "nome": "Estado", "tipo": "enum", "so_leitura": true, "opcoes": {"0": "Dormindo", "1": "Em espera", "2": "Pausado", "3": "Voltando à base", "4": "Carregando", "5": "Aspirando", "6": "Aspirando e passando pano", "7": "Passando pano", "8": "Atualizando", "9": "Lavando o mop", "10": "Secando o mop", "11": "Coletando o pó", "12": "Secagem pausada"}},
+        {"id": "3.1", "nome": "Bateria", "tipo": "num", "so_leitura": true, "unidade": "%"},
+        {"id": "2.2", "nome": "Código de aviso", "tipo": "num", "so_leitura": true},
+        {"id": "7.4", "nome": "Mop", "tipo": "enum", "so_leitura": true, "opcoes": {"0": "Sem mop", "1": "Instalado"}},
+        {"id": "7.3", "nome": "Reservatório", "tipo": "enum", "so_leitura": true, "opcoes": {"0": "Nenhum", "1": "Pó", "2": "Água", "3": "Pó e água"}},
+        {"id": "7.22", "nome": "Tempo da última limpeza", "tipo": "num", "so_leitura": true, "unidade": "min"},
+        {"id": "7.23", "nome": "Área da última limpeza", "tipo": "num", "so_leitura": true, "unidade": "m²"}
+      ], "acoes": [
+        {"id": "2.1", "nome": "Limpar (modo atual)"},
+        {"id": "2.3", "nome": "Só aspirar"},
+        {"id": "2.5", "nome": "Aspirar e passar pano"},
+        {"id": "2.6", "nome": "Só passar pano"},
+        {"id": "2.2", "nome": "Parar"},
+        {"id": "3.1", "nome": "Voltar à base"},
+        {"id": "7.11", "nome": "Lavar o mop", "args": [1]},
+        {"id": "7.11", "nome": "Secar o mop", "args": [2]}
+      ]},
+      {"nome": "Limpeza", "props": [
+        {"id": "2.4", "nome": "Modo", "tipo": "enum", "opcoes": {"0": "Aspirar", "1": "Aspirar e passar pano", "2": "Passar pano", "3": "Aspirar, depois pano"}},
+        {"id": "7.5", "nome": "Sucção", "tipo": "enum", "opcoes": {"0": "Silenciosa", "1": "Padrão", "2": "Média", "3": "Turbo"}},
+        {"id": "7.6", "nome": "Água", "tipo": "enum", "opcoes": {"0": "Pouca", "1": "Média", "2": "Muita"}},
+        {"id": "7.1", "nome": "Passar duas vezes", "tipo": "enum", "opcoes": {"0": "Não", "1": "Sim"}},
+        {"id": "7.7", "nome": "Trajeto do pano", "tipo": "enum", "opcoes": {"0": "Em S", "1": "Em Y (mais caprichado)"}},
+        {"id": "7.44", "nome": "Turbo no tapete", "tipo": "enum", "opcoes": {"0": "Não", "1": "Sim"}},
+        {"id": "7.47", "nome": "Evitar tapete ao passar pano", "tipo": "enum", "so_grava": true, "opcoes": {"0": "Não", "1": "Sim"}},
+        {"id": "7.35", "nome": "Reconhecer sujeira", "tipo": "enum", "opcoes": {"0": "Não", "1": "Sim"}},
+        {"id": "7.36", "nome": "Modo pet", "tipo": "enum", "opcoes": {"0": "Não", "1": "Sim"}},
+        {"id": "7.42", "nome": "Reconhecimento de obstáculos (IA)", "tipo": "enum", "opcoes": {"0": "Não", "1": "Sim"}}
+      ]},
+      {"nome": "Base e mop", "props": [
+        {"id": "7.60", "nome": "Lavar o mop no meio da limpeza", "tipo": "enum", "opcoes": {"0": "Não", "1": "Sim"}},
+        {"id": "7.62", "nome": "Lavar a cada", "tipo": "enum", "so_grava": true, "opcoes": {"5": "5 m²", "10": "10 m²"}},
+        {"id": "7.54", "nome": "Secagem do mop", "tipo": "enum", "opcoes": {"0": "Pausada", "1": "Ligada"}},
+        {"id": "7.63", "nome": "Tempo de secagem", "tipo": "num", "so_grava": true, "min": 4, "max": 12, "unidade": "h"}
+      ]},
+      {"nome": "Robô", "props": [
+        {"id": "4.2", "nome": "Volume", "tipo": "num", "min": 0, "max": 10},
+        {"id": "7.59", "nome": "Trava infantil", "tipo": "enum", "opcoes": {"0": "Desligada", "1": "Ligada"}},
+        {"id": "10.1", "nome": "Lembrar o mapa", "tipo": "enum", "opcoes": {"0": "Não", "1": "Sim"}}
+      ], "acoes": [
+        {"id": "4.1", "nome": "Encontrar o robô (tocar som)", "set": true, "valor": true}
+      ]},
+      {"nome": "Consumíveis", "props": [
+        {"id": "15.1", "nome": "Filtro", "tipo": "num", "so_leitura": true, "unidade": "%"},
+        {"id": "15.2", "nome": "Filtro (dias restantes)", "tipo": "num", "so_leitura": true, "unidade": "dias"},
+        {"id": "16.2", "nome": "Escova principal", "tipo": "num", "so_leitura": true, "unidade": "%"},
+        {"id": "16.1", "nome": "Escova principal (dias)", "tipo": "num", "so_leitura": true, "unidade": "dias"},
+        {"id": "17.2", "nome": "Escova lateral", "tipo": "num", "so_leitura": true, "unidade": "%"},
+        {"id": "17.1", "nome": "Escova lateral (dias)", "tipo": "num", "so_leitura": true, "unidade": "dias"},
+        {"id": "18.1", "nome": "Mop", "tipo": "num", "so_leitura": true, "unidade": "%"},
+        {"id": "18.2", "nome": "Mop (dias)", "tipo": "num", "so_leitura": true, "unidade": "dias"}
+      ], "acoes": [
+        {"id": "15.1", "nome": "Zerar filtro (troquei)", "confirmar": "Zerar o contador do filtro?"},
+        {"id": "16.1", "nome": "Zerar escova principal", "confirmar": "Zerar o contador da escova principal?"},
+        {"id": "17.1", "nome": "Zerar escova lateral", "confirmar": "Zerar o contador da escova lateral?"},
+        {"id": "18.1", "nome": "Zerar mop", "confirmar": "Zerar o contador do mop?"}
+      ]}
+    ],
+    "controle_remoto": {"id": "7.16", "comandos": {"frente": 1, "esquerda": 2, "direita": 3, "re": 4, "parar": 5, "sair": 10}}
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "Casa & Rancho",
+  "short_name": "Casas",
+  "description": "Câmeras, avisos e robô",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f1216",
+  "theme_color": "#1d4ed8",
+  "lang": "pt-BR",
+  "icons": [
+    {"src": "/icone-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "/icone-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "/icone-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

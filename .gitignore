@@ -1,0 +1,36 @@
+# credenciais: tokens dos aparelhos, sessão da nuvem Xiaomi, token do agente
+secrets/
+.env
+vps/.env
+*.pem
+*.key
+
+# go2rtc local: a seção xiaomi: guarda a credencial da conta
+bin/
+go2rtc.yaml
+!vps/go2rtc/go2rtc.yaml
+
+# modelos (baixe você mesmo; ver README) e binários gerados
+models/
+*.onnx
+vps/app/models/
+vps/vigia/models/
+vps/ponte/
+*.exe
+
+# cópias geradas pelo vps/publicar.sh
+vps/app/visao.py
+vps/vigia/agente.py
+vps/vigia/miio.py
+
+# dados, logs e ambiente
+dados/
+*.db
+*.log
+*.log.*
+__pycache__/
+.venv/
+agent/.venv/
+work/
+*.xapk
+*.apk

@@ -1,0 +1,532 @@
+diff --git a/dns_termux.go b/dns_termux.go
+new file mode 100644
+index 0000000..93a708e
+--- /dev/null
++++ b/dns_termux.go
+@@ -0,0 +1,26 @@
++package main
++
++// Ponte do rancho (celular Android + Termux): o binário linux/arm é estático (CGO_ENABLED=0) e o
++// resolvedor do Go lê /etc/resolv.conf, que não existe no Android -> sem DNS (api.io.mi.com falha).
++// Sem esse arquivo, usa o DNS de GO2RTC_DNS (padrão 1.1.1.1:53). No PC/VPS nada muda.
++
++import (
++	"context"
++	"net"
++	"os"
++	"time"
++)
++
++func init() {
++	if _, err := os.Stat("/etc/resolv.conf"); err == nil {
++		return
++	}
++	srv := os.Getenv("GO2RTC_DNS")
++	if srv == "" {
++		srv = "1.1.1.1:53"
++	}
++	d := net.Dialer{Timeout: 5 * time.Second}
++	net.DefaultResolver = &net.Resolver{PreferGo: true, Dial: func(ctx context.Context, network, _ string) (net.Conn, error) {
++		return d.DialContext(ctx, network, srv)
++	}}
++}
+diff --git a/internal/streams/stream.go b/internal/streams/stream.go
+index 984c73e..b053534 100644
+--- a/internal/streams/stream.go
++++ b/internal/streams/stream.go
+@@ -47,6 +47,21 @@ func NewStream(source any) *Stream {
+ 	}
+ }
+ 
++// Conns returns the active producer connections (patch casa: PTZ Xiaomi).
++func (s *Stream) Conns() []core.Producer {
++	s.mu.Lock()
++	defer s.mu.Unlock()
++	var out []core.Producer
++	for _, p := range s.producers {
++		p.mu.Lock()
++		if p.conn != nil {
++			out = append(out, p.conn)
++		}
++		p.mu.Unlock()
++	}
++	return out
++}
++
+ func (s *Stream) Sources() []string {
+ 	sources := make([]string, 0, len(s.producers))
+ 	for _, prod := range s.producers {
+diff --git a/internal/xiaomi/xiaomi.go b/internal/xiaomi/xiaomi.go
+index 1801fa8..f3a3110 100644
+--- a/internal/xiaomi/xiaomi.go
++++ b/internal/xiaomi/xiaomi.go
+@@ -7,6 +7,7 @@ import (
+ 	"fmt"
+ 	"net/http"
+ 	"net/url"
++	"strconv"
+ 	"strings"
+ 	"sync"
+ 
+@@ -47,6 +48,7 @@ func Init() {
+ 	})
+ 
+ 	api.HandleFunc("api/xiaomi", apiXiaomi)
++	api.HandleFunc("api/xiaomi/ptz", apiPTZ) // patch casa
+ }
+ 
+ var tokens map[string]string
+@@ -170,7 +172,8 @@ func getMissURL(url *url.URL) (string, error) {
+ 		Vendor struct {
+ 			ID     byte `json:"vendor"`
+ 			Params struct {
+-				UID string `json:"p2p_id"`
++				UID        string `json:"p2p_id"`
++				InitString string `json:"init_string"`
+ 			} `json:"vendor_params"`
+ 		} `json:"vendor"`
+ 		PublicKey string `json:"public_key"`
+@@ -189,6 +192,10 @@ func getMissURL(url *url.URL) (string, error) {
+ 	if v.Vendor.ID == 1 {
+ 		query.Set("uid", v.Vendor.Params.UID)
+ 	}
++	if v.Vendor.ID == 4 && v.Vendor.Params.InitString != "" { // CS2: servidores P2P para o modo internet
++		query.Set("p2p_id", v.Vendor.Params.UID)
++		query.Set("init_string", v.Vendor.Params.InitString)
++	}
+ 
+ 	url.RawQuery = query.Encode()
+ 	return url.String(), nil
+@@ -215,6 +222,37 @@ func wakeUpCamera(url *url.URL) error {
+ 	return err
+ }
+ 
++// apiPTZ: POST /api/xiaomi/ptz?src=<stream>&op=<operation> (patch casa).
++// Sends the motor command over the stream's active xiaomi/miss connection.
++func apiPTZ(w http.ResponseWriter, r *http.Request) {
++	if r.Method != "POST" {
++		http.Error(w, "use POST", http.StatusMethodNotAllowed)
++		return
++	}
++	query := r.URL.Query()
++	stream := streams.Get(query.Get("src"))
++	if stream == nil {
++		http.Error(w, api.StreamNotFound, http.StatusNotFound)
++		return
++	}
++	op, err := strconv.Atoi(query.Get("op"))
++	if err != nil {
++		http.Error(w, "invalid op", http.StatusBadRequest)
++		return
++	}
++	for _, conn := range stream.Conns() {
++		if m, ok := conn.(interface{ Motor(int) error }); ok {
++			if err = m.Motor(op); err != nil {
++				http.Error(w, err.Error(), http.StatusInternalServerError)
++				return
++			}
++			api.ResponseJSON(w, map[string]any{"ok": true, "op": op})
++			return
++		}
++	}
++	http.Error(w, "no active xiaomi/miss connection (open the stream first)", http.StatusConflict)
++}
++
+ func apiXiaomi(w http.ResponseWriter, r *http.Request) {
+ 	switch r.Method {
+ 	case "GET":
+diff --git a/pkg/xiaomi/miss/client.go b/pkg/xiaomi/miss/client.go
+index 6eaa06c..7ad2a19 100644
+--- a/pkg/xiaomi/miss/client.go
++++ b/pkg/xiaomi/miss/client.go
+@@ -7,6 +7,7 @@ import (
+ 	"errors"
+ 	"fmt"
+ 	"net"
++	"os"
+ 	"net/url"
+ 	"time"
+ 
+@@ -55,7 +56,8 @@ func NewClient(rawURL string) (*Client, error) {
+ 	var conn Conn
+ 	switch s := query.Get("vendor"); s {
+ 	case "cs2":
+-		conn, err = cs2.Dial(u.Host, query.Get("transport"))
++		// p2p_id/init_string (da nuvem): plano B pela internet quando a câmera não responde na rede local
++		conn, err = cs2.DialP2P(u.Host, query.Get("transport"), query.Get("p2p_id"), query.Get("init_string"), query.Get("p2p"))
+ 	case "tutk":
+ 		conn, err = tutk.Dial(u.Host, query.Get("uid"), "Miss", "client")
+ 	default:
+@@ -189,6 +191,39 @@ func (c *Client) StartMedia(channel, quality, audio string) error {
+ 	return c.WriteCommand(data)
+ }
+ 
++// StartPlayback sends MISS_CMD_PLAYBACK_REQ (0x10D) to play the camera's SD card recording (patch casa).
++// Format taken from the Xiaomi Home app (SDCardPlayerActivity.setPlayTime): every field is an int and the
++// times are unix seconds. With autoswitchtolive the camera switches to live once playback reaches "now".
++func (c *Client) StartPlayback(start, end int64, speed int, toLive bool) error {
++	live := 0
++	if toLive {
++		live = 1
++	}
++	data := binary.BigEndian.AppendUint32(nil, cmdPlaybackReq)
++	data = fmt.Appendf(data, `{"sessionid":%d,"starttime":%d,"endtime":%d,"autoswitchtolive":%d,"offset":0,"speed":%d,"avchannelmerge":0}`,
++		time.Now().Unix()&0x7fffffff, start, end, live, speed)
++	if err := c.WriteCommand(data); err != nil {
++		return err
++	}
++	// the camera answers on the command channel (PLAYBACK_RESP); log every answer (no deadline: it would
++	// kill the shared UDP reader)
++	go func() {
++		for {
++			cmd, res, err := c.Conn.ReadCommand()
++			if err != nil {
++				return
++			}
++			if cmd == cmdEncoded || cmd == 0x01100000 { // ReadCommand is little endian, cmdEncoded goes big endian
++				if dec, err2 := crypto.Decode(res, c.key); err2 == nil {
++					res = dec
++				}
++			}
++			fmt.Fprintf(os.Stderr, "miss: playback command answer cmd=0x%X data=%q\n", cmd, res)
++		}
++	}()
++	return nil
++}
++
+ func (c *Client) StopMedia() error {
+ 	data := binary.BigEndian.AppendUint32(nil, cmdVideoStop)
+ 	return c.WriteCommand(data)
+diff --git a/pkg/xiaomi/miss/cs2/conn.go b/pkg/xiaomi/miss/cs2/conn.go
+index 1bea07c..540a1b8 100644
+--- a/pkg/xiaomi/miss/cs2/conn.go
++++ b/pkg/xiaomi/miss/cs2/conn.go
+@@ -17,7 +17,10 @@ func Dial(host, transport string) (*Conn, error) {
+ 	if err != nil {
+ 		return nil, err
+ 	}
++	return newConn(conn), nil
++}
+ 
++func newConn(conn net.Conn) *Conn {
+ 	_, isTCP := conn.(*tcpConn)
+ 
+ 	c := &Conn{
+@@ -28,7 +31,7 @@ func Dial(host, transport string) (*Conn, error) {
+ 		},
+ 	}
+ 	go c.worker()
+-	return c, nil
++	return c
+ }
+ 
+ type Conn struct {
+@@ -444,7 +447,14 @@ func (c *dataChannel) Push(b []byte) error {
+ 		select {
+ 		case c.popBuf <- c.waitData[:c.waitSize]:
+ 		default:
+-			return fmt.Errorf("pop buffer is full")
++			// Com perda de pacotes (Wi-Fi fraco, internet) um pacote atrasado libera de uma vez tudo o que estava
++			// esperando no pushBuf (até 250) e a fila de 100 enchia: a sessão caía a cada ~10 s (Rancho 2, -87 dBm).
++			// Espera o leitor esvaziar um pouco antes de desistir.
++			select {
++			case c.popBuf <- c.waitData[:c.waitSize]:
++			case <-time.After(2 * time.Second):
++				return fmt.Errorf("pop buffer is full")
++			}
+ 		}
+ 
+ 		c.waitData = c.waitData[c.waitSize:]
+diff --git a/pkg/xiaomi/miss/cs2/internet.go b/pkg/xiaomi/miss/cs2/internet.go
+new file mode 100644
+index 0000000..017249d
+--- /dev/null
++++ b/pkg/xiaomi/miss/cs2/internet.go
+@@ -0,0 +1,218 @@
++package cs2
++
++// Modo internet do CS2 (PPPP), como o app Xiaomi faz quando a câmera não está na mesma rede: formatos tirados da
++// libPPCS_API.so do app (símbolos cs2p2p_PPPP_Proto_*). A nuvem (miss_get_vendor) dá o p2p_id e a init_string.
++//
++//	HELLO (F1 00) e P2P_REQ (F1 20: DID + nosso endereço local) -> servidores CS2, UDP 32100
++//	servidor -> P2P_REQ_ACK (F1 21) e PUNCH_TO (F1 40: endereços da câmera, público e local)
++//	PUNCH_PKT (F1 41: DID) para esses endereços até a câmera responder P2P_RDY (F1 42)
++//
++// Depois disso a sessão é igual à da rede local (DRW). Testado em 03/11 do PC de casa até a câmera do rancho
++// (NAT do modem): P2P_RDY em 0,65 s.
++
++import (
++	"encoding/binary"
++	"errors"
++	"fmt"
++	"net"
++	"strconv"
++	"strings"
++	"time"
++)
++
++const (
++	msgHello      = 0x00
++	msgHelloAck   = 0x01
++	msgP2PReq     = 0x20
++	msgP2PReqAck  = 0x21
++	msgPunchTo    = 0x40
++	serverPortCS2 = 32100
++)
++
++// initKey: tabela de 54 bytes da cs2p2p_PPPP_DecodeString (libPPCS_API.so, 0x10fc09).
++var initKey = []byte{
++	0x49, 0x59, 0x43, 0x3d, 0xb5, 0xbf, 0x6d, 0xa3, 0x47, 0x53, 0x4f, 0x61, 0x65, 0xe3, 0x71, 0xe9,
++	0x67, 0x7f, 0x02, 0x03, 0x0b, 0xad, 0xb3, 0x89, 0x2b, 0x2f, 0x35, 0xc1, 0x6b, 0x8b, 0x95, 0x97,
++	0x11, 0xe5, 0xa7, 0x0d, 0xef, 0xf1, 0x05, 0x07, 0x83, 0xfb, 0x9d, 0x3b, 0xc5, 0xc7, 0x13, 0x17,
++	0x1d, 0x1f, 0x25, 0x29, 0xd3, 0xdf,
++}
++
++// DecodeInitString devolve a lista de servidores P2P ("ip1,ip2,ip3,") da init_string.
++func DecodeInitString(s string) []string {
++	if i := strings.IndexByte(s, ':'); i >= 0 {
++		s = s[:i] // depois do ':' viria a chave P2P (as das câmeras Xiaomi não têm)
++	}
++	out := make([]byte, 0, len(s)/2)
++	for i := 0; i < len(s)/2; i++ {
++		x := byte(0x39)
++		for _, b := range out {
++			x ^= b
++		}
++		out = append(out, initKey[i%len(initKey)]^x^(16*s[2*i]+s[2*i+1]+0xAF))
++	}
++	var servers []string
++	for _, h := range strings.Split(strings.TrimRight(string(out), "\x00"), ",") {
++		if h = strings.TrimSpace(h); h != "" {
++			servers = append(servers, h)
++		}
++	}
++	return servers
++}
++
++// didBytes: prefixo (8 bytes) + série (u32 big endian) + código de verificação (8 bytes).
++func didBytes(did string) ([]byte, error) {
++	p := strings.Split(did, "-")
++	if len(p) != 3 {
++		return nil, errors.New("cs2: p2p_id inválido")
++	}
++	sn, err := strconv.ParseUint(p[1], 10, 32)
++	if err != nil {
++		return nil, errors.New("cs2: p2p_id inválido")
++	}
++	b := make([]byte, 20)
++	copy(b[:7], p[0])
++	binary.BigEndian.PutUint32(b[8:], uint32(sn))
++	copy(b[12:19], p[2])
++	return b, nil
++}
++
++// sockaddr como a lib grava: família big endian, porta e IP com os bytes ao contrário da ordem de rede.
++func putSockaddr(b []byte, addr *net.UDPAddr) {
++	binary.BigEndian.PutUint16(b, 2)
++	binary.LittleEndian.PutUint16(b[2:], uint16(addr.Port))
++	ip := addr.IP.To4()
++	b[4], b[5], b[6], b[7] = ip[3], ip[2], ip[1], ip[0]
++}
++
++func readSockaddr(b []byte) *net.UDPAddr {
++	return &net.UDPAddr{IP: net.IPv4(b[7], b[6], b[5], b[4]), Port: int(binary.LittleEndian.Uint16(b[2:]))}
++}
++
++func cs2Msg(typ byte, body []byte) []byte {
++	b := make([]byte, 4+len(body))
++	b[0], b[1] = magic, typ
++	binary.BigEndian.PutUint16(b[2:], uint16(len(body)))
++	copy(b[4:], body)
++	return b
++}
++
++// DialP2P é o Dial com o plano B pela internet. mode: "" = rede local e, se falhar e houver p2p_id/init_string,
++// pela internet; "lan" = só rede local; "internet" = só pelos servidores (câmera em outra rede de propósito).
++func DialP2P(host, transport, did, initString, mode string) (*Conn, error) {
++	var conn net.Conn
++	var err error
++	if mode != "internet" {
++		conn, err = handshake(host, transport)
++	}
++	if mode == "internet" || (err != nil && mode != "lan" && did != "" && initString != "") {
++		var errLAN = err
++		if conn, err = handshakeInternet(did, initString, 15*time.Second); err != nil && errLAN != nil {
++			err = fmt.Errorf("%w (rede local: %v)", err, errLAN)
++		}
++	}
++	if err != nil {
++		return nil, err
++	}
++	return newConn(conn), nil
++}
++
++// handshakeInternet faz a sessão pelos servidores CS2 e devolve a conexão já apontada para o endereço da câmera
++// que respondeu P2P_RDY. Só UDP (o P2P_RDY_TCP da rede local não existe aqui).
++func handshakeInternet(did, initString string, timeout time.Duration) (net.Conn, error) {
++	servers := DecodeInitString(initString)
++	if len(servers) == 0 {
++		return nil, errors.New("cs2: init_string sem servidores")
++	}
++	id, err := didBytes(did)
++	if err != nil {
++		return nil, err
++	}
++
++	conn, err := net.ListenUDP("udp4", nil)
++	if err != nil {
++		return nil, err
++	}
++
++	var srvAddrs []*net.UDPAddr
++	for _, s := range servers {
++		if a, err := net.ResolveUDPAddr("udp4", net.JoinHostPort(s, strconv.Itoa(serverPortCS2))); err == nil {
++			srvAddrs = append(srvAddrs, a)
++		}
++	}
++	if len(srvAddrs) == 0 {
++		_ = conn.Close()
++		return nil, errors.New("cs2: nenhum servidor P2P resolvido")
++	}
++
++	// endereço local que vai no P2P_REQ: o IP da rota até o 1º servidor e a porta do nosso socket
++	local := &net.UDPAddr{IP: net.IPv4zero, Port: conn.LocalAddr().(*net.UDPAddr).Port}
++	if c, err := net.DialUDP("udp4", nil, srvAddrs[0]); err == nil {
++		local.IP = c.LocalAddr().(*net.UDPAddr).IP
++		_ = c.Close()
++	}
++	req := make([]byte, 36)
++	copy(req, id)
++	putSockaddr(req[20:], local)
++	hello, p2pReq, punch := cs2Msg(msgHello, nil), cs2Msg(msgP2PReq, req), cs2Msg(msgPunchPkt, id)
++
++	deadline := time.Now().Add(timeout)
++	var punchTo []*net.UDPAddr
++	var lastReq time.Time
++	buf := make([]byte, 1500)
++
++	for time.Now().Before(deadline) {
++		if time.Since(lastReq) > 2*time.Second {
++			lastReq = time.Now()
++			for _, a := range srvAddrs {
++				_, _ = conn.WriteToUDP(hello, a)
++				_, _ = conn.WriteToUDP(p2pReq, a)
++			}
++		}
++		for _, a := range punchTo {
++			// porta ±3 também: alguns NATs dão porta vizinha à que o servidor viu
++			for d := -3; d <= 3; d++ {
++				if p := a.Port + d; p > 0 && p < 65536 {
++					_, _ = conn.WriteToUDP(punch, &net.UDPAddr{IP: a.IP, Port: p})
++				}
++			}
++		}
++
++		_ = conn.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
++		for {
++			n, from, err := conn.ReadFromUDP(buf)
++			if err != nil {
++				break // timeout curto: volta a mandar os punches
++			}
++			if n < 4 || buf[0] != magic {
++				continue
++			}
++			switch body := buf[4:n]; buf[1] {
++			case msgPunchTo:
++				if len(body) >= 8 {
++					a := readSockaddr(body)
++					novo := true
++					for _, p := range punchTo {
++						if p.IP.Equal(a.IP) && p.Port == a.Port {
++							novo = false
++						}
++					}
++					if novo {
++						punchTo = append(punchTo, a)
++					}
++				}
++			case msgPunchPkt:
++				// a câmera também fura o NAT na nossa direção: responder acelera o P2P_RDY
++				_, _ = conn.WriteToUDP(cs2Msg(msgP2PRdyUDP, id), from)
++			case msgP2PRdyUDP:
++				_ = conn.SetReadDeadline(time.Time{})
++				return &udpConn{UDPConn: conn, addr: from}, nil
++			}
++		}
++	}
++
++	_ = conn.Close()
++	if len(punchTo) == 0 {
++		return nil, errors.New("cs2: internet: os servidores P2P não deram o endereço da câmera (offline?)")
++	}
++	return nil, errors.New("cs2: internet: a câmera não respondeu ao punch")
++}
+diff --git a/pkg/xiaomi/miss/producer.go b/pkg/xiaomi/miss/producer.go
+index eeaa496..22c310a 100644
+--- a/pkg/xiaomi/miss/producer.go
++++ b/pkg/xiaomi/miss/producer.go
+@@ -1,8 +1,10 @@
+ package miss
+ 
+ import (
++	"encoding/binary"
+ 	"fmt"
+ 	"net/url"
++	"strconv"
+ 	"time"
+ 
+ 	"github.com/AlexxIT/go2rtc/pkg/core"
+@@ -26,13 +28,32 @@ func Dial(rawURL string) (core.Producer, error) {
+ 	u, _ := url.Parse(rawURL)
+ 	query := u.Query()
+ 
+-	err = client.StartMedia(query.Get("channel"), query.Get("subtype"), query.Get("audio"))
++	// patch casa: playback=<unix s> toca a gravação do cartão SD (endtime=, speed=, live=0 para não emendar no ao vivo)
++	if pb := query.Get("playback"); pb != "" {
++		start, _ := strconv.ParseInt(pb, 10, 64)
++		end, _ := strconv.ParseInt(query.Get("endtime"), 10, 64)
++		if end == 0 {
++			end = time.Now().Unix()
++		}
++		speed, _ := strconv.Atoi(query.Get("speed"))
++		if speed == 0 {
++			speed = 1
++		}
++		err = client.StartPlayback(start, end, speed, query.Get("live") != "0")
++	} else {
++		err = client.StartMedia(query.Get("channel"), query.Get("subtype"), query.Get("audio"))
++	}
+ 	if err != nil {
+ 		_ = client.Close()
+ 		return nil, err
+ 	}
+ 
+-	medias, err := probe(client, query.Get("audio") != "0")
++	// patch casa: no cartão a câmera demora a achar o arquivo (garagem: 11 s; EC3 Pro passou de 15 s em 31/10)
++	wait := 15 * time.Second
++	if query.Get("playback") != "" {
++		wait = 45 * time.Second
++	}
++	medias, err := probe(client, query.Get("audio") != "0", wait)
+ 	if err != nil {
+ 		_ = client.Close()
+ 		return nil, err
+@@ -52,8 +73,16 @@ func Dial(rawURL string) (core.Producer, error) {
+ 	}, nil
+ }
+ 
+-func probe(client *Client, audio bool) ([]*core.Media, error) {
+-	_ = client.SetDeadline(time.Now().Add(15 * time.Second))
++// Motor sends MISS_CMD_MOTOR_REQ (0x112) {"operation":op} over the open session (patch casa).
++// op: 1 left, 2 right, 3 up, 4 down, 5 calibrate, 6 get angle, -1001 stop.
++func (p *Producer) Motor(op int) error {
++	data := binary.BigEndian.AppendUint32(nil, cmdMotorReq)
++	data = fmt.Appendf(data, `{"operation":%d}`, op)
++	return p.client.WriteCommand(data)
++}
++
++func probe(client *Client, audio bool, wait time.Duration) ([]*core.Media, error) {
++	_ = client.SetDeadline(time.Now().Add(wait))
+ 
+ 	var vcodec, acodec *core.Codec
+ 
