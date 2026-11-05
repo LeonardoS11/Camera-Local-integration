@@ -146,6 +146,11 @@ Instale também o Termux:Boot e libere o Termux da economia de bateria do Androi
 - Os botões dos avisos do ntfy usam um token fixo (`ACAO_TOKEN`). Quem assina o tópico consegue usá-lo. Trocar
   por URL assinada está na lista de pendências.
 
+## Licença
+
+Código deste repositório: [MIT](LICENSE). Os modelos de IA não fazem parte dele e seguem as licenças próprias
+(ver a tabela; o ArcFace `buffalo_l` é só para uso não comercial).
+
 ## Licenças de terceiros
 
 - go2rtc: MIT (o patch é derivado dele).
